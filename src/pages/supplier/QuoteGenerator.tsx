@@ -7,9 +7,10 @@ import { CheckCircle, Send, Loader2 } from "lucide-react";
 import { quoteSchema, type QuoteInput } from "@/lib/validations";
 import { PageHeader, SectionCard } from "@/components/shared/UIHelpers";
 import { createQuote, getRFQById, getProducts } from "@/lib/mock-api";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function QuoteGenerator() {
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const rfqId = searchParams.get("rfqId") || "";
   const [submitted, setSubmitted] = useState(false);
@@ -65,6 +66,9 @@ export default function QuoteGenerator() {
       quantityUnit: rfq.quantityUnit,
       validUntil: new Date(Date.now() + (data.validityDays * 24 * 60 * 60 * 1000)).toISOString()
     });
+    queryClient.invalidateQueries({ queryKey: ["supplier-quotes"] });
+    queryClient.invalidateQueries({ queryKey: ["rfqs-inbox"] });
+    queryClient.invalidateQueries({ queryKey: ["supplier-stats"] });
     setSubmitted(true);
   };
 

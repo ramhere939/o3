@@ -13,6 +13,7 @@ export default function RFQInbox() {
   const { data: rfqs, isLoading } = useQuery({
     queryKey: ["rfqs-inbox", filter],
     queryFn: () => getRFQs({ status: filter || undefined }),
+    refetchInterval: 5000,
   });
 
   const openRFQs = rfqs?.filter((r) => r.status === "sent" || r.status === "viewed") || [];
@@ -28,12 +29,18 @@ export default function RFQInbox() {
 
       {/* Status filters */}
       <div className="flex gap-2 flex-wrap">
-        {["", "sent", "viewed", "quote_received", "expired"].map((s) => (
-          <button key={s} onClick={() => setFilter(s)}
+        {[
+          { id: "", label: "Open RFQs" },
+          { id: "sent", label: "New RFQs" },
+          { id: "viewed", label: "Viewed" },
+          { id: "quote_received", label: "Quoted" },
+          { id: "expired", label: "Expired" }
+        ].map((f) => (
+          <button key={f.id} onClick={() => setFilter(f.id)}
             className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
-              filter === s ? "bg-indigo-600 text-white" : "bg-white border border-slate-200 text-slate-600 hover:border-slate-300"
+              filter === f.id ? "bg-indigo-600 text-white" : "bg-white border border-slate-200 text-slate-600 hover:border-slate-300"
             }`}>
-            {s === "" ? "Open RFQs" : s.split("_").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ")}
+            {f.label}
           </button>
         ))}
       </div>

@@ -13,7 +13,7 @@ import {
   TrendingDown,
   Loader2,
 } from "lucide-react";
-import { getQuotes, getRFQById } from "@/lib/mock-api";
+import { getQuotes, getRFQById, acceptQuote } from "@/lib/mock-api";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { StatusChip } from "@/components/shared/StatusChip";
 import { PageHeader, SectionCard, EmptyState } from "@/components/shared/UIHelpers";
@@ -34,6 +34,23 @@ export default function QuoteCompare() {
     queryKey: ["quotes", rfqId],
     queryFn: () => getQuotes({ rfqId }),
     enabled: !!rfqId,
+  });
+
+  const acceptMutation = useMutation({
+    mutationFn: (quoteId: string) => acceptQuote(quoteId),
+    onSuccess: () => {
+      alert("Quote accepted successfully! Notification sent to supplier.");
+      queryClient.invalidateQueries({ queryKey: ["quotes", rfqId] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["rfqs"] });
+      setTimeout(() => {
+        navigate("/buyer/orders");
+      }, 1500);
+    },
+    onError: (error) => {
+      console.error(error);
+      alert("Failed to accept quote. If you just updated the backend, please restart the server!");
+    }
   });
 
   const updateQuote = useMutation({
@@ -295,14 +312,17 @@ export default function QuoteCompare() {
                 >
                   {q.status === "pending" ? (
                     <div className="flex flex-col gap-2">
-                      <button
-                        onClick={() =>
-                          updateQuote.mutate({ quoteId: q.id, status: "accepted" })
-                        }
-                        disabled={updateQuote.isPending}
-                        className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-medium py-2 rounded-lg flex items-center justify-center gap-1.5 transition-colors"
+                      <button 
+                        onClick={() => acceptMutation.mutate(q.id)}
+                        disabled={acceptMutation.isPending || updateQuote.isPending}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-xs font-medium py-2 rounded-lg flex items-center justify-center gap-1.5 transition-colors"
                       >
-                        <Check className="w-3.5 h-3.5" /> Accept
+                        {acceptMutation.isPending && acceptMutation.variables === q.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Check className="w-3.5 h-3.5" />
+                        )}
+                        {acceptMutation.isPending && acceptMutation.variables === q.id ? "Accepting..." : "Accept"}
                       </button>
                       <Link
                         to={`/buyer/quotes/negotiate?quoteId=${q.id}&rfqId=${rfqId}`}

@@ -9,7 +9,11 @@ import { useState } from "react";
 
 export default function PurchaseOrders() {
   const [filter, setFilter] = useState("");
-  const { data: orders, isLoading } = useQuery({ queryKey: ["orders"], queryFn: () => getOrders() });
+  const { data: orders, isLoading } = useQuery({ 
+    queryKey: ["orders"], 
+    queryFn: () => getOrders(),
+    refetchInterval: 5000 
+  });
   const filtered = filter ? orders?.filter((o) => o.status === filter) : orders;
 
   return (

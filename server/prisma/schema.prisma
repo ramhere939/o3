@@ -125,3 +125,13 @@ model ShipmentEvent {
   location  String?
   completed Boolean @default(false)
 }
+
+model Document {
+  id         String   @id @default(uuid())
+  name       String
+  type       String
+  size       String
+  format     String
+  status     String   @default("active")
+  uploadedAt DateTime @default(now())
+}

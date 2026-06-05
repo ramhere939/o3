@@ -36,6 +36,7 @@ export default function RFQTracker() {
   const { data: rfqs, isLoading } = useQuery({
     queryKey: ["rfqs", statusFilter],
     queryFn: () => getRFQs({ status: statusFilter || undefined }),
+    refetchInterval: 5000,
   });
 
   return (
@@ -134,7 +135,7 @@ export default function RFQTracker() {
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {rfq.status === "quote_received" && (
                       <Link
-                        to="/buyer/quotes/compare"
+                        to={`/buyer/quotes/compare?rfqId=${rfq.id}`}
                         className="flex items-center gap-1.5 text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
                       >
                         Compare <ChevronRight className="w-3 h-3" />
