@@ -1,0 +1,109 @@
+import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { Eye, Clock, CheckCircle, AlertCircle, ArrowRight, Package } from "lucide-react";
+import { getRFQs } from "@/lib/mock-api";
+import { formatDate, formatRelativeTime } from "@/lib/utils";
+import { StatusChip } from "@/components/shared/StatusChip";
+import { PageHeader, EmptyState, TableSkeleton } from "@/components/shared/UIHelpers";
+import { useState } from "react";
+
+export default function RFQInbox() {
+  const [filter, setFilter] = useState("");
+  const { data: rfqs, isLoading } = useQuery({
+    queryKey: ["rfqs-inbox", filter],
+    queryFn: () => getRFQs({ status: filter || undefined }),
+  });
+
+  const openRFQs = rfqs?.filter((r) => r.status === "sent" || r.status === "viewed") || [];
+  const displayRFQs = filter ? rfqs : openRFQs;
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="RFQ Inbox"
+        subtitle={`${openRFQs.length} new RFQs awaiting your quote`}
+        breadcrumb={["Supplier Portal", "RFQ Inbox"]}
+      />
+
+      {/* Status filters */}
+      <div className="flex gap-2 flex-wrap">
+        {["", "sent", "viewed", "quote_received", "expired"].map((s) => (
+          <button key={s} onClick={() => setFilter(s)}
+            className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+              filter === s ? "bg-indigo-600 text-white" : "bg-white border border-slate-200 text-slate-600 hover:border-slate-300"
+            }`}>
+            {s === "" ? "Open RFQs" : s.split("_").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ")}
+          </button>
+        ))}
+      </div>
+
+      {isLoading ? <TableSkeleton /> : displayRFQs?.length === 0 ? (
+        <EmptyState icon={<Package className="w-8 h-8" />} title="No RFQs found" description="New RFQs matching your product catalog will appear here" />
+      ) : (
+        <div className="space-y-3">
+          {displayRFQs?.map((rfq, i) => (
+            <motion.div
+              key={rfq.id}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.04 }}
+              className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-sm transition-all"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center flex-shrink-0">
+                  <Package className="w-4.5 h-4.5 text-indigo-600" />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-sm font-semibold text-slate-900">{rfq.productName}</h3>
+                        <StatusChip status={rfq.status} />
+                      </div>
+                      <p className="text-xs text-slate-400 mt-0.5">{rfq.rfqNumber} · {rfq.grade}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-sm font-semibold text-slate-800">{rfq.quantity.toLocaleString()} {rfq.quantityUnit}</p>
+                      {rfq.targetPrice && (
+                        <p className="text-xs text-emerald-600 font-medium">Target: ₹{rfq.targetPrice}/{rfq.quantityUnit}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-4 mt-2.5 text-xs text-slate-500">
+                    <span>🏢 {rfq.buyerName}</span>
+                    <span>📍 {rfq.deliveryLocation}</span>
+                    <span>📅 Deliver by {formatDate(rfq.deliveryDate)}</span>
+                    <span>💳 {rfq.paymentTerms.replace("_", " ")}</span>
+                    <span className="text-slate-400">Posted {formatRelativeTime(rfq.createdAt)}</span>
+                  </div>
+
+                  {rfq.notes && (
+                    <p className="mt-2 text-xs text-slate-500 bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
+                      <span className="font-medium text-slate-600">Notes:</span> {rfq.notes}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex-shrink-0">
+                  <Link
+                    to={`/supplier/quotes?rfqId=${rfq.id}`}
+                    className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors"
+                  >
+                    Submit Quote <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                  <p className="text-[10px] text-slate-400 text-right mt-1.5 flex items-center gap-0.5 justify-end">
+                    <Clock className="w-3 h-3" />
+                    Closes {formatDate(rfq.expiresAt)}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

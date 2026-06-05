@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  role         String // 'buyer' or 'supplier'
+  companyName  String
+  avatar       String?
+  gstin        String?
+  mobile       String
+  verified     Boolean  @default(false)
+  kycStatus    String   @default("pending") // 'pending', 'in_review', 'approved', 'rejected'
+  createdAt    DateTime @default(now())
+}
+
+model Product {
+  id           String   @id @default(uuid())
+  name         String
+  casNumber    String
+  hsnCode      String
+  grade        String
+  category     String
+  price        Float
+  priceUnit    String
+  currency     String   @default("INR")
+  moq          Int
+  moqUnit      String
+  supplierId   String
+  supplierName String
+  location     String
+  leadTimeDays Int
+  rating       Float    @default(0)
+  reviewCount  Int      @default(0)
+  imageUrl     String?
+  description  String
+  tags         String // comma separated
+  inStock      Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+model RFQ {
+  id               String   @id @default(uuid())
+  rfqNumber        String   @unique
+  buyerId          String
+  buyerName        String
+  productName      String
+  casNumber        String?
+  quantity         Int
+  quantityUnit     String
+  grade            String?
+  deliveryDate     String
+  deliveryLocation String
+  paymentTerms     String
+  notes            String?
+  status           String   @default("sent") // 'draft', 'sent', 'viewed', 'quote_received', 'expired', 'closed'
+  quotesReceived   Int      @default(0)
+  createdAt        DateTime @default(now())
+  expiresAt        DateTime
+  expiryDays       Int      @default(7)
+  dispatchMethod   String   @default("auto") // 'auto', 'shortlist'
+  targetPrice      Float?
+}
+
+model Quote {
+  id             String   @id @default(uuid())
+  quoteNumber    String   @unique
+  rfqId          String
+  supplierId     String
+  supplierName   String
+  supplierRating Float    @default(0)
+  price          Float
+  priceUnit      String
+  totalAmount    Float
+  quantity       Int
+  quantityUnit   String
+  leadTimeDays   Int
+  paymentTerms   String
+  logisticsTerms String
+  validityDays   Int
+  validUntil     DateTime
+  status         String   @default("pending") // 'pending', 'accepted', 'rejected', 'negotiating', 'expired'
+  notes          String?
+  createdAt      DateTime @default(now())
+}
+
+model Order {
+  id               String          @id @default(uuid())
+  poNumber         String          @unique
+  rfqId            String
+  quoteId          String
+  buyerId          String
+  buyerName        String
+  supplierId       String
+  supplierName     String
+  productName      String
+  quantity         Int
+  quantityUnit     String
+  unitPrice        Float
+  totalAmount      Float
+  status           String          @default("confirmed") // 'confirmed', 'invoice_generated', 'dispatched', 'in_transit', 'delivered', 'cancelled'
+  paymentStatus    String          @default("pending") // 'pending', 'paid', 'overdue'
+  createdAt        DateTime        @default(now())
+  expectedDelivery String
+  invoiceUrl       String?
+  poUrl            String?
+  ewayBillUrl      String?
+  shipmentEvents   ShipmentEvent[]
+}
+
+model ShipmentEvent {
+  id        String  @id @default(uuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  status    String
+  label     String
+  timestamp String
+  location  String?
+  completed Boolean @default(false)
+}

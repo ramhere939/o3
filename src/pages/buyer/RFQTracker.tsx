@@ -1,0 +1,158 @@
+import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { Clock, CheckCircle, Eye, MessageSquare, AlertCircle, Plus, ChevronRight } from "lucide-react";
+import { getRFQs } from "@/lib/mock-api";
+import { formatDate, formatRelativeTime } from "@/lib/utils";
+import { StatusChip } from "@/components/shared/StatusChip";
+import { PageHeader, SectionCard, EmptyState, TableSkeleton } from "@/components/shared/UIHelpers";
+import type { RFQStatus } from "@/types";
+import { useState } from "react";
+
+const STATUS_FILTERS: { label: string; value: string }[] = [
+  { label: "All", value: "" },
+  { label: "Sent", value: "sent" },
+  { label: "Viewed", value: "viewed" },
+  { label: "Quote Received", value: "quote_received" },
+  { label: "Expired", value: "expired" },
+];
+
+const TIMELINE_ICONS: Record<string, React.ElementType> = {
+  sent: Clock,
+  viewed: Eye,
+  quote_received: CheckCircle,
+  expired: AlertCircle,
+};
+const TIMELINE_COLORS: Record<string, string> = {
+  sent: "text-blue-500 bg-blue-50 border-blue-200",
+  viewed: "text-violet-500 bg-violet-50 border-violet-200",
+  quote_received: "text-emerald-500 bg-emerald-50 border-emerald-200",
+  expired: "text-slate-400 bg-slate-50 border-slate-200",
+};
+
+export default function RFQTracker() {
+  const [statusFilter, setStatusFilter] = useState("");
+
+  const { data: rfqs, isLoading } = useQuery({
+    queryKey: ["rfqs", statusFilter],
+    queryFn: () => getRFQs({ status: statusFilter || undefined }),
+  });
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="RFQ Tracker"
+        subtitle="Monitor all your Requests for Quotation"
+        breadcrumb={["Buyer Portal", "RFQ Tracker"]}
+        action={
+          <Link
+            to="/buyer/rfq/create"
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          >
+            <Plus className="w-4 h-4" /> New RFQ
+          </Link>
+        }
+      />
+
+      {/* Status filter pills */}
+      <div className="flex flex-wrap gap-2">
+        {STATUS_FILTERS.map((f) => (
+          <button
+            key={f.value}
+            onClick={() => setStatusFilter(f.value)}
+            className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+              statusFilter === f.value
+                ? "bg-indigo-600 text-white shadow-sm"
+                : "bg-white border border-slate-200 text-slate-600 hover:border-slate-300"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {/* RFQ list */}
+      {isLoading ? (
+        <TableSkeleton />
+      ) : rfqs?.length === 0 ? (
+        <EmptyState
+          icon={<Clock className="w-8 h-8" />}
+          title="No RFQs found"
+          description="Create your first RFQ to start receiving quotes from suppliers"
+          action={<Link to="/buyer/rfq/create" className="bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg">Create RFQ</Link>}
+        />
+      ) : (
+        <div className="space-y-3">
+          {rfqs?.map((rfq, i) => {
+            const Icon = TIMELINE_ICONS[rfq.status] || Clock;
+            const colorClass = TIMELINE_COLORS[rfq.status] || TIMELINE_COLORS.sent;
+
+            return (
+              <motion.div
+                key={rfq.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.04 }}
+                className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-sm transition-all"
+              >
+                <div className="flex items-start gap-4">
+                  {/* Timeline icon */}
+                  <div className={`w-10 h-10 rounded-xl border flex items-center justify-center flex-shrink-0 ${colorClass}`}>
+                    <Icon className="w-4.5 h-4.5" />
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="text-sm font-semibold text-slate-900">{rfq.productName}</h3>
+                          <StatusChip status={rfq.status} />
+                        </div>
+                        <p className="text-xs text-slate-400 mt-0.5">{rfq.rfqNumber} · {rfq.grade}</p>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-sm font-semibold text-slate-800">
+                          {rfq.quantity.toLocaleString()} {rfq.quantityUnit}
+                        </p>
+                        <p className="text-xs text-slate-400">{formatRelativeTime(rfq.createdAt)}</p>
+                      </div>
+                    </div>
+
+                    {/* Details row */}
+                    <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-slate-500">
+                      <span>📍 {rfq.deliveryLocation}</span>
+                      <span>📅 Needed by {formatDate(rfq.deliveryDate)}</span>
+                      <span>💳 {rfq.paymentTerms.replace("_", " ")}</span>
+                      {rfq.quotesReceived > 0 && (
+                        <span className="text-emerald-600 font-medium">✓ {rfq.quotesReceived} quote{rfq.quotesReceived !== 1 ? "s" : ""} received</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {rfq.status === "quote_received" && (
+                      <Link
+                        to="/buyer/quotes/compare"
+                        className="flex items-center gap-1.5 text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+                      >
+                        Compare <ChevronRight className="w-3 h-3" />
+                      </Link>
+                    )}
+                    {(rfq.status === "viewed" || rfq.status === "sent") && (
+                      <span className="flex items-center gap-1 text-xs text-slate-400">
+                        <Clock className="w-3 h-3" />
+                        Expires {formatDate(rfq.expiresAt)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
