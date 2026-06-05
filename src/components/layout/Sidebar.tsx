@@ -52,11 +52,10 @@ const supplierNav = [
 ];
 
 const globalNav = [
-  { label: "AI Tools", icon: Sparkles, to: "/ai/search" },
-  { label: "Price Intelligence", icon: BarChart2, to: "/ai/price-intelligence" },
-  { label: "SDS Assistant", icon: FlaskConical, to: "/ai/sds" },
-  { label: "Content Hub", icon: BookOpen, to: "/content" },
-  { label: "Premium", icon: Star, to: "/premium" },
+  { label: "AI Tools", icon: Sparkles, to: "/buyer/search" },
+  { label: "Price Intelligence", icon: BarChart2, to: "/price-intelligence" },
+  { label: "SDS Assistant", icon: FlaskConical, to: "/sds-assistant" },
+  { label: "Content Hub", icon: BookOpen, to: "/content-hub" },
   { label: "Notifications", icon: Bell, to: "/notifications" },
 ];
 

@@ -9,6 +9,16 @@ import type {
   Notification,
 } from "@/types";
 
+export interface Document {
+  id: string;
+  name: string;
+  type: string;
+  size: string;
+  format: string;
+  status: string;
+  uploadedAt: string;
+}
+
 import suppliersData from "@/mock-data/suppliers.json";
 import buyersData from "@/mock-data/buyers.json";
 import notificationsData from "@/mock-data/notifications.json";
@@ -48,9 +58,11 @@ export async function getProducts(filters?: {
     const q = filters.search.toLowerCase();
     result = result.filter(
       (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.casNumber.includes(q) ||
-        p.tags.some((t) => t.toLowerCase().includes(q))
+        (p.name && p.name.toLowerCase().includes(q)) ||
+        (p.casNumber && p.casNumber.toLowerCase().includes(q)) ||
+        (typeof p.tags === 'string' 
+          ? p.tags.toLowerCase().includes(q) 
+          : Array.isArray(p.tags) && p.tags.some((t: string) => t.toLowerCase().includes(q)))
     );
   }
   if (filters?.category) {
@@ -167,6 +179,10 @@ export async function getQuoteById(id: string): Promise<Quote | undefined> {
   return quotes.find((q) => q.id === id);
 }
 
+export async function acceptQuote(quoteId: string): Promise<Order> {
+  return fetchAPI<Order>(`/quotes/${quoteId}/accept`, { method: "POST" });
+}
+
 // ─── Orders ──────────────────────────────────────────────────────────────────
 
 export async function getOrders(filters?: {
@@ -263,9 +279,11 @@ export async function aiSearch(query: string) {
   const q = query.toLowerCase();
   let matchedProducts = products.filter(
     (p) =>
-      p.name.toLowerCase().includes(q.split(" ").find((w) => w.length > 4) || q) ||
-      p.tags.some((t) => q.includes(t.toLowerCase())) ||
-      p.category.toLowerCase().includes(q)
+      (p.name && p.name.toLowerCase().includes(q.split(" ").find((w) => w.length > 4) || q)) ||
+      (typeof p.tags === 'string' 
+        ? p.tags.toLowerCase().includes(q) 
+        : Array.isArray(p.tags) && p.tags.some((t: string) => q.includes(t.toLowerCase()))) ||
+      (p.category && p.category.toLowerCase().includes(q))
   );
   if (matchedProducts.length === 0) {
     matchedProducts = products.slice(0, 6);
@@ -349,4 +367,17 @@ export async function getContentArticles() {
     { id: "c8", title: "Digital Transformation in Chemical Distribution", summary: "How B2B platforms are reshaping chemical distribution in India — reducing intermediaries and improving price transparency.", category: "market_news", author: "O3 Research Team", publishedAt: "2024-08-26", readTimeMinutes: 5, premium: false },
     { id: "c9", title: "Pharmaceutical Supply Chain Risk Management 2024", summary: "Strategies for diversifying API and excipient supply chains to mitigate geopolitical and logistical risks.", category: "industry_reports", author: "Meenakshi Rao, PharmD", publishedAt: "2024-08-24", readTimeMinutes: 15, premium: true },
   ];
+}
+
+// ─── Documents ─────────────────────────────────────────────────────────────
+
+export async function getDocuments(): Promise<Document[]> {
+  return fetchAPI<Document[]>("/documents");
+}
+
+export async function uploadDocument(data: Partial<Document>): Promise<Document> {
+  return fetchAPI<Document>("/documents", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }

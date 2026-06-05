@@ -1,8 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-import { Star, Check, X, MessageSquare, Shield, Clock, DollarSign } from "lucide-react";
-import { getQuotes } from "@/lib/mock-api";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Star, Check, X, MessageSquare, Shield, Clock, DollarSign, Loader2 } from "lucide-react";
+import { getQuotes, acceptQuote, getRFQById } from "@/lib/mock-api";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { StatusChip } from "@/components/shared/StatusChip";
 import { PageHeader, SectionCard, EmptyState } from "@/components/shared/UIHelpers";
@@ -10,9 +10,36 @@ import { PageHeader, SectionCard, EmptyState } from "@/components/shared/UIHelpe
 const FEATURED_RFQ = { id: "rfq1", name: "Titanium Dioxide (Rutile Grade)", qty: "2,000 kg" };
 
 export default function QuoteCompare() {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const rfqId = searchParams.get("rfqId") || "rfq1";
+
+  const { data: rfq } = useQuery({
+    queryKey: ["rfq", rfqId],
+    queryFn: () => getRFQById(rfqId),
+  });
+
   const { data: quotes, isLoading } = useQuery({
-    queryKey: ["quotes", "rfq1"],
-    queryFn: () => getQuotes({ rfqId: "rfq1" }),
+    queryKey: ["quotes", rfqId],
+    queryFn: () => getQuotes({ rfqId: rfqId }),
+  });
+
+  const acceptMutation = useMutation({
+    mutationFn: (quoteId: string) => acceptQuote(quoteId),
+    onSuccess: () => {
+      alert("Quote accepted successfully! Notification sent to supplier.");
+      queryClient.invalidateQueries({ queryKey: ["quotes", rfqId] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["rfqs"] });
+      setTimeout(() => {
+        navigate("/buyer/orders");
+      }, 1500);
+    },
+    onError: (error) => {
+      console.error(error);
+      alert("Failed to accept quote. If you just updated the backend, please restart the server!");
+    }
   });
 
   if (isLoading) {
@@ -36,13 +63,13 @@ export default function QuoteCompare() {
       <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-indigo-500 font-medium uppercase tracking-wide">RFQ-2024-0001</p>
-            <h2 className="text-base font-semibold text-indigo-900">{FEATURED_RFQ.name}</h2>
-            <p className="text-sm text-indigo-600">{FEATURED_RFQ.qty} · Net 30 Days · Mumbai</p>
+            <p className="text-xs text-indigo-500 font-medium uppercase tracking-wide">{rfq?.rfqNumber || "RFQ"}</p>
+            <h2 className="text-base font-semibold text-indigo-900">{rfq?.productName || "Product"}</h2>
+            <p className="text-sm text-indigo-600">{rfq?.quantity} {rfq?.quantityUnit} · {rfq?.paymentTerms?.replace("_", " ")} · {rfq?.deliveryLocation}</p>
           </div>
           <div className="text-right">
             <p className="text-xs text-indigo-500">Target Price</p>
-            <p className="text-xl font-bold text-indigo-700">₹180/kg</p>
+            <p className="text-xl font-bold text-indigo-700">{rfq?.targetPrice ? `₹${rfq.targetPrice}/${rfq.quantityUnit}` : "Not Set"}</p>
           </div>
         </div>
       </div>
@@ -162,8 +189,17 @@ export default function QuoteCompare() {
                 }`}>
                   {q.status === "pending" ? (
                     <div className="flex flex-col gap-2">
-                      <button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium py-2 rounded-lg flex items-center justify-center gap-1.5 transition-colors">
-                        <Check className="w-3.5 h-3.5" /> Accept
+                      <button 
+                        onClick={() => acceptMutation.mutate(q.id)}
+                        disabled={acceptMutation.isPending}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-xs font-medium py-2 rounded-lg flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        {acceptMutation.isPending && acceptMutation.variables === q.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Check className="w-3.5 h-3.5" />
+                        )}
+                        {acceptMutation.isPending && acceptMutation.variables === q.id ? "Accepting..." : "Accept"}
                       </button>
                       <Link
                         to="/buyer/quotes/negotiate"
