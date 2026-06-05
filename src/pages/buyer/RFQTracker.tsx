@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Clock, CheckCircle, Eye, MessageSquare, AlertCircle, Plus, ChevronRight } from "lucide-react";
+import { Clock, CheckCircle, Eye, AlertCircle, Plus, ChevronRight } from "lucide-react";
 import { getRFQs } from "@/lib/mock-api";
 import { formatDate, formatRelativeTime } from "@/lib/utils";
 import { StatusChip } from "@/components/shared/StatusChip";
-import { PageHeader, SectionCard, EmptyState, TableSkeleton } from "@/components/shared/UIHelpers";
-import type { RFQStatus } from "@/types";
+import { PageHeader, EmptyState, TableSkeleton } from "@/components/shared/UIHelpers";
+import { RFQDetailModal } from "@/components/shared/RFQDetailModal";
 import { useState } from "react";
 
 const STATUS_FILTERS: { label: string; value: string }[] = [
@@ -32,6 +32,7 @@ const TIMELINE_COLORS: Record<string, string> = {
 
 export default function RFQTracker() {
   const [statusFilter, setStatusFilter] = useState("");
+  const [selectedRFQId, setSelectedRFQId] = useState<string | null>(null);
 
   const { data: rfqs, isLoading } = useQuery({
     queryKey: ["rfqs", statusFilter],
@@ -94,7 +95,8 @@ export default function RFQTracker() {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.04 }}
-                className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-sm transition-all"
+                onClick={() => setSelectedRFQId(rfq.id)}
+                className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md hover:border-indigo-200 transition-all cursor-pointer group"
               >
                 <div className="flex items-start gap-4">
                   {/* Timeline icon */}
@@ -107,7 +109,7 @@ export default function RFQTracker() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="text-sm font-semibold text-slate-900">{rfq.productName}</h3>
+                          <h3 className="text-sm font-semibold text-slate-900 group-hover:text-indigo-700 transition-colors">{rfq.productName}</h3>
                           <StatusChip status={rfq.status} />
                         </div>
                         <p className="text-xs text-slate-400 mt-0.5">{rfq.rfqNumber} · {rfq.grade}</p>
@@ -132,7 +134,7 @@ export default function RFQTracker() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                     {rfq.status === "quote_received" && (
                       <Link
                         to={`/buyer/quotes/compare?rfqId=${rfq.id}`}
@@ -147,6 +149,7 @@ export default function RFQTracker() {
                         Expires {formatDate(rfq.expiresAt)}
                       </span>
                     )}
+                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-400 transition-colors" />
                   </div>
                 </div>
               </motion.div>
@@ -154,6 +157,12 @@ export default function RFQTracker() {
           })}
         </div>
       )}
+
+      <RFQDetailModal
+        rfqId={selectedRFQId}
+        onClose={() => setSelectedRFQId(null)}
+        viewerRole="buyer"
+      />
     </div>
   );
 }

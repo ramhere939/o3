@@ -21,7 +21,7 @@ import {
   AlertCircle,
   Eye,
 } from "lucide-react";
-import { getRFQById, getQuotes } from "@/lib/mock-api";
+import { getRFQById, getQuotes, acceptQuote } from "@/lib/mock-api";
 import { formatDate, formatRelativeTime, formatCurrency } from "@/lib/utils";
 import { StatusChip } from "./StatusChip";
 import type { RFQ, Quote } from "@/types";
@@ -210,20 +210,28 @@ export function RFQDetailModal({
     enabled: !!rfqId,
   });
 
-  const updateQuoteMutation = useMutation({
-    mutationFn: async ({
-      quoteId,
-      status,
-    }: {
-      quoteId: string;
-      status: string;
-    }) => {
+  const acceptMutation = useMutation({
+    mutationFn: (quoteId: string) => acceptQuote(quoteId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quotes", rfqId] });
+      queryClient.invalidateQueries({ queryKey: ["rfqs"] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      onClose();
+      navigate("/buyer/orders");
+    },
+    onError: () => {
+      alert("Failed to accept quote. Please try again.");
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: async (quoteId: string) => {
       const res = await fetch(`/api/quotes/${quoteId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status: "rejected" }),
       });
-      if (!res.ok) throw new Error("Failed to update quote");
+      if (!res.ok) throw new Error("Failed to reject quote");
       return res.json();
     },
     onSuccess: () => {
@@ -232,10 +240,8 @@ export function RFQDetailModal({
     },
   });
 
-  const handleAccept = (quoteId: string) =>
-    updateQuoteMutation.mutate({ quoteId, status: "accepted" });
-  const handleReject = (quoteId: string) =>
-    updateQuoteMutation.mutate({ quoteId, status: "rejected" });
+  const handleAccept = (quoteId: string) => acceptMutation.mutate(quoteId);
+  const handleReject = (quoteId: string) => rejectMutation.mutate(quoteId);
   const handleNegotiate = (quoteId: string) => {
     onClose();
     navigate(`/buyer/quotes/negotiate?quoteId=${quoteId}&rfqId=${rfqId}`);
