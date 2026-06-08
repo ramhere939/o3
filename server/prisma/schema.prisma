@@ -126,7 +126,10 @@ model ShipmentEvent {
   completed Boolean @default(false)
 }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> e596a926a205c1fe2340d9fb149e323bec224112
 model Document {
   id         String   @id @default(uuid())
   name       String
