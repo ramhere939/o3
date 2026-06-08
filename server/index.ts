@@ -1,9 +1,41 @@
 import express from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 
 const prisma = new PrismaClient();
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+
+io.on("connection", (socket) => {
+  socket.on("join_quote_room", (quoteId) => {
+    socket.join(quoteId);
+  });
+
+  socket.on("send_message", async (data) => {
+    try {
+      const savedMessage = await prisma.message.create({
+        data: {
+          quoteId: data.quoteId,
+          sender: data.sender,
+          text: data.text,
+          counterPrice: data.counterPrice,
+          counterLeadTime: data.counterLeadTime,
+        }
+      });
+      io.to(data.quoteId).emit("receive_message", savedMessage);
+    } catch (error) {
+      console.error("Error saving message:", error);
+    }
+  });
+});
 app.use(cors());
 app.use(express.json());
 
@@ -239,6 +271,37 @@ app.post('/api/documents', async (req, res) => {
   res.json(newDocument);
 });
 
-app.listen(3001, () => {
+// Admin
+app.get('/api/admin/stats', async (req, res) => {
+  const totalUsers = await prisma.user.count();
+  const pendingKyc = await prisma.user.count({ where: { kycStatus: 'pending' } });
+  const pendingListings = await prisma.product.count();
+  
+  res.json({
+    totalUsers,
+    pendingKyc,
+    pendingListings,
+    openDisputes: 7, // Mocked for now
+    recentActivity: [
+      { id: 1, type: 'kyc_approved', message: 'KYC Approved - ChemCorp India', time: '2 mins ago', color: 'bg-green-500' },
+      { id: 2, type: 'dispute_raised', message: 'New Dispute Raised - Order #4592', time: '15 mins ago', color: 'bg-yellow-500' },
+      { id: 3, type: 'catalog_upload', message: 'Bulk Catalog Upload - 50 Items', time: '1 hour ago', color: 'bg-blue-500' }
+    ]
+  });
+});
+
+app.get('/api/quotes/:id/messages', async (req, res) => {
+  try {
+    const messages = await prisma.message.findMany({
+      where: { quoteId: req.params.id },
+      orderBy: { timestamp: 'asc' }
+    });
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch messages" });
+  }
+});
+
+httpServer.listen(3001, () => {
   console.log('Server is running on http://localhost:3001');
 });

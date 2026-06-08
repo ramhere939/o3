@@ -138,7 +138,7 @@ export default function SupplierDashboard() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-100">
-                {["Product", "Price", "Status"].map((h) => (
+                {["Product", "Price", "Status", "Action"].map((h) => (
                   <th key={h} className="text-left text-xs font-medium text-slate-400 px-5 py-3">{h}</th>
                 ))}
               </tr>
@@ -156,6 +156,11 @@ export default function SupplierDashboard() {
                   </td>
                   <td className="px-5 py-3 text-right pr-5">
                     <StatusChip status={q.status} />
+                  </td>
+                  <td className="px-5 py-3">
+                    <Link to={`/supplier/quotes/negotiate?rfqId=${q.rfqId}&quoteId=${q.id}`} className="text-xs font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                      Chat <ArrowRight className="w-3 h-3"/>
+                    </Link>
                   </td>
                 </tr>
               ))}

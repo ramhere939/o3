@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Zap, ArrowRight, Building2, ShoppingCart } from "lucide-react";
+import { Eye, EyeOff, Zap, ArrowRight, Building2, ShoppingCart, ShieldCheck } from "lucide-react";
 import { loginSchema, type LoginInput } from "@/lib/validations";
 import { useApp } from "@/context/AppContext";
 import type { UserRole } from "@/types";
@@ -77,16 +77,16 @@ export default function Login() {
             <p className="text-slate-500 text-sm mb-8">Sign in to your O3 account</p>
 
             {/* Role selector */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="grid grid-cols-3 gap-2 mb-6">
               {[
-                { value: "buyer", label: "I'm a Buyer", icon: ShoppingCart },
-                { value: "supplier", label: "I'm a Supplier", icon: Building2 },
+                { value: "buyer", label: "Buyer", icon: ShoppingCart },
+                { value: "supplier", label: "Supplier", icon: Building2 },
               ].map(({ value, label, icon: Icon }) => (
                 <button
                   key={value}
                   type="button"
                   onClick={() => setValue("role", value as UserRole)}
-                  className={`flex items-center gap-2.5 p-3.5 rounded-xl border-2 transition-all text-sm font-medium ${
+                  className={`flex items-center justify-center gap-1.5 p-3 rounded-xl border-2 transition-all text-sm font-medium ${
                     selectedRole === value
                       ? "border-indigo-600 bg-indigo-50 text-indigo-700"
                       : "border-slate-200 text-slate-500 hover:border-slate-300"
@@ -96,6 +96,15 @@ export default function Login() {
                   {label}
                 </button>
               ))}
+              <a
+                href="http://localhost:5175"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-1.5 p-3 rounded-xl border-2 border-slate-200 text-slate-500 hover:border-slate-300 transition-all text-sm font-medium hover:bg-slate-50"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                Admin
+              </a>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

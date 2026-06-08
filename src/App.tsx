@@ -24,6 +24,7 @@ import DocumentsVault from "./pages/buyer/DocumentsVault";
 import SupplierDashboard from "./pages/supplier/SupplierDashboard";
 import RFQInbox from "./pages/supplier/RFQInbox";
 import QuoteGenerator from "./pages/supplier/QuoteGenerator";
+import SupplierQuoteNegotiate from "./pages/supplier/QuoteNegotiate";
 import InventoryManagement from "./pages/supplier/InventoryManagement";
 import SupplierFulfillment from "./pages/supplier/SupplierFulfillment";
 import SupplierEarnings from "./pages/supplier/SupplierEarnings";
@@ -64,6 +65,7 @@ function AppRoutes() {
         <Route path="/supplier/dashboard" element={<SupplierDashboard />} />
         <Route path="/supplier/rfq-inbox" element={<RFQInbox />} />
         <Route path="/supplier/quotes" element={<QuoteGenerator />} />
+        <Route path="/supplier/quotes/negotiate" element={<SupplierQuoteNegotiate />} />
         <Route path="/supplier/inventory" element={<InventoryManagement />} />
         <Route path="/supplier/fulfillment" element={<SupplierFulfillment />} />
         <Route path="/supplier/earnings" element={<SupplierEarnings />} />
