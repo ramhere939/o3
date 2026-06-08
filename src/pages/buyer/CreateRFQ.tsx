@@ -7,8 +7,10 @@ import { CheckCircle, ArrowLeft, FlaskConical } from "lucide-react";
 import { rfqSchema, type RFQInput } from "@/lib/validations";
 import { PageHeader, SectionCard } from "@/components/shared/UIHelpers";
 import { createRFQ } from "@/lib/mock-api";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function CreateRFQ() {
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const [submitted, setSubmitted] = useState(false);
   const navigate = useNavigate();
@@ -33,6 +35,8 @@ export default function CreateRFQ() {
       casNumber: data.casNumber || "",
       notes: data.notes || "",
     });
+    queryClient.invalidateQueries({ queryKey: ["rfqs"] });
+    queryClient.invalidateQueries({ queryKey: ["open-rfqs"] });
     setSubmitted(true);
   };
 

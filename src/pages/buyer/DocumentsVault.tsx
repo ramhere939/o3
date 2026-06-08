@@ -1,22 +1,9 @@
-import { motion } from "framer-motion";
-import { FolderOpen, FileText, Download, Upload, Shield, AlertCircle, Eye, Search } from "lucide-react";
-import { PageHeader, SectionCard } from "@/components/shared/UIHelpers";
 import { useState } from "react";
-
-const MOCK_DOCS = [
-  { id: "d1", name: "GST Certificate", type: "KYC", size: "245 KB", uploadedAt: "2024-08-15", status: "verified", format: "PDF" },
-  { id: "d2", name: "PAN Card", type: "KYC", size: "180 KB", uploadedAt: "2024-08-15", status: "verified", format: "PDF" },
-  { id: "d3", name: "COA — TiO2 Rutile Batch Aug24", type: "COA", size: "320 KB", uploadedAt: "2024-09-04", status: "active", format: "PDF" },
-  { id: "d4", name: "TDS — Titanium Dioxide Supplier", type: "TDS", size: "180 KB", uploadedAt: "2024-09-04", status: "active", format: "PDF" },
-  { id: "d5", name: "PO-2024-0001", type: "PO", size: "95 KB", uploadedAt: "2024-08-28", status: "active", format: "PDF" },
-  { id: "d6", name: "PO-2024-0002", type: "PO", size: "88 KB", uploadedAt: "2024-08-28", status: "active", format: "PDF" },
-  { id: "d7", name: "Invoice INV-0001", type: "Invoice", size: "145 KB", uploadedAt: "2024-08-29", status: "active", format: "PDF" },
-  { id: "d8", name: "Invoice INV-0002", type: "Invoice", size: "138 KB", uploadedAt: "2024-08-29", status: "active", format: "PDF" },
-  { id: "d9", name: "E-way Bill — PO-2024-0001", type: "Eway Bill", size: "75 KB", uploadedAt: "2024-09-01", status: "active", format: "PDF" },
-  { id: "d10", name: "SDS — Hydrochloric Acid", type: "SDS/MSDS", size: "520 KB", uploadedAt: "2024-09-02", status: "active", format: "PDF" },
-  { id: "d11", name: "SDS — Caustic Soda Flakes", type: "SDS/MSDS", size: "490 KB", uploadedAt: "2024-09-02", status: "active", format: "PDF" },
-  { id: "d12", name: "NDA — Aditya Chemicals", type: "Legal", size: "215 KB", uploadedAt: "2024-08-01", status: "active", format: "PDF" },
-];
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import { FolderOpen, FileText, Download, Upload, Shield, Search, Eye } from "lucide-react";
+import { PageHeader } from "@/components/shared/UIHelpers";
+import { getDocuments, uploadDocument } from "@/lib/mock-api";
 
 const DOC_TYPES = ["All", "KYC", "COA", "TDS", "PO", "Invoice", "Eway Bill", "SDS/MSDS", "Legal"];
 
@@ -34,8 +21,34 @@ const TYPE_COLORS: Record<string, string> = {
 export default function DocumentsVault() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
+  const queryClient = useQueryClient();
 
-  const filtered = MOCK_DOCS.filter(
+  const { data: docs = [], isLoading } = useQuery({
+    queryKey: ["documents"],
+    queryFn: getDocuments,
+  });
+
+  const uploadMutation = useMutation({
+    mutationFn: (newDoc: any) => uploadDocument(newDoc),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+    },
+  });
+
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      uploadMutation.mutate({
+        name: file.name,
+        type: "KYC",
+        size: `${Math.max(1, Math.round(file.size / 1024))} KB`,
+        format: file.name.split(".").pop()?.toUpperCase() || "DOC",
+        status: "active",
+      });
+    }
+  };
+
+  const filtered = docs.filter(
     (d) =>
       (typeFilter === "All" || d.type === typeFilter) &&
       d.name.toLowerCase().includes(search.toLowerCase())
@@ -50,7 +63,7 @@ export default function DocumentsVault() {
         action={
           <label className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg cursor-pointer transition-colors">
             <Upload className="w-4 h-4" /> Upload Document
-            <input type="file" className="hidden" />
+            <input type="file" className="hidden" onChange={handleUpload} />
           </label>
         }
       />

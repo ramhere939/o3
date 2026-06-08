@@ -18,6 +18,7 @@ export default function SupplierDashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["supplier-stats"],
     queryFn: () => getSupplierDashboardStats("s1"),
+    refetchInterval: 5000,
   });
 
   const { data: revenue, isLoading: revenueLoading } = useQuery({
@@ -28,11 +29,13 @@ export default function SupplierDashboard() {
   const { data: quotes } = useQuery({
     queryKey: ["supplier-quotes"],
     queryFn: () => getQuotes({ supplierId: "s1" }),
+    refetchInterval: 5000,
   });
 
   const { data: rfqs } = useQuery({
     queryKey: ["open-rfqs"],
     queryFn: () => getRFQs({ status: "sent" }),
+    refetchInterval: 5000,
   });
 
   const recentQuotes = quotes?.slice(0, 5) || [];
@@ -174,7 +177,7 @@ export default function SupplierDashboard() {
                   <p className="text-xs text-slate-400">Buyer: {rfq.buyerName}</p>
                 </div>
                 <Link
-                  to="/supplier/quotes"
+                  to={`/supplier/quotes?rfqId=${rfq.id}`}
                   className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg font-medium flex items-center gap-1 ml-3 flex-shrink-0"
                 >
                   Quote <ArrowRight className="w-3 h-3" />

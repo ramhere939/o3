@@ -111,6 +111,73 @@ app.patch('/api/quotes/:id', async (req, res) => {
   res.json(updatedQuote);
 });
 
+app.post('/api/quotes/:id/accept', async (req, res) => {
+  const quoteId = req.params.id;
+  
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Update this quote to accepted
+      const acceptedQuote = await tx.quote.update({
+        where: { id: quoteId },
+        data: { status: 'accepted' }
+      });
+      
+      // 2. Reject all other quotes for this RFQ
+      await tx.quote.updateMany({
+        where: { rfqId: acceptedQuote.rfqId, id: { not: quoteId } },
+        data: { status: 'rejected' }
+      });
+      
+      // 3. Update the RFQ status to closed
+      const rfq = await tx.rFQ.update({
+        where: { id: acceptedQuote.rfqId },
+        data: { status: 'closed' }
+      });
+      
+      // 4. Create an Order
+      const newOrder = await tx.order.create({
+        data: {
+          poNumber: `PO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+          rfqId: rfq.id,
+          quoteId: acceptedQuote.id,
+          buyerId: rfq.buyerId,
+          buyerName: rfq.buyerName,
+          supplierId: acceptedQuote.supplierId,
+          supplierName: acceptedQuote.supplierName,
+          productName: rfq.productName,
+          quantity: acceptedQuote.quantity,
+          quantityUnit: acceptedQuote.quantityUnit,
+          unitPrice: acceptedQuote.price,
+          totalAmount: acceptedQuote.totalAmount,
+          status: 'confirmed',
+          paymentStatus: 'pending',
+          expectedDelivery: new Date(Date.now() + (acceptedQuote.leadTimeDays * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+          createdAt: new Date(),
+        }
+      });
+      
+      // 5. Create initial ShipmentEvent
+      await tx.shipmentEvent.create({
+        data: {
+          orderId: newOrder.id,
+          status: "order_placed",
+          label: "Order Placed",
+          timestamp: new Date().toISOString(),
+          location: "System",
+          completed: true
+        }
+      });
+      
+      return newOrder;
+    });
+    
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to accept quote' });
+  }
+});
+
 // Orders
 app.get('/api/orders', async (req, res) => {
   const { buyerId, supplierId } = req.query;
@@ -151,6 +218,25 @@ app.post('/api/orders', async (req, res) => {
   });
   
   res.json(newOrder);
+});
+
+// Documents
+app.get('/api/documents', async (req, res) => {
+  const documents = await prisma.document.findMany({
+    orderBy: { uploadedAt: 'desc' }
+  });
+  res.json(documents);
+});
+
+app.post('/api/documents', async (req, res) => {
+  const data = req.body;
+  const newDocument = await prisma.document.create({
+    data: {
+      ...data,
+      uploadedAt: new Date()
+    }
+  });
+  res.json(newDocument);
 });
 
 app.listen(3001, () => {
