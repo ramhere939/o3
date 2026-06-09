@@ -274,26 +274,51 @@ export async function getSupplierDashboardStats(supplierId = "s1") {
 // ─── AI Search ───────────────────────────────────────────────────────────────
 
 export async function aiSearch(query: string) {
-  await delay(1200);
+  // Use Gemini to extract structured filters from the natural language query
+  const filters = await parseSearchQuery(query);
+  
   const products = await fetchAPI<Product[]>("/products");
-  const q = query.toLowerCase();
-  let matchedProducts = products.filter(
-    (p) =>
-      (p.name && p.name.toLowerCase().includes(q.split(" ").find((w) => w.length > 4) || q)) ||
-      (typeof p.tags === 'string'
-        ? p.tags.toLowerCase().includes(q)
-        : Array.isArray(p.tags) && p.tags.some((t: string) => q.includes(t.toLowerCase()))) ||
-      (p.category && p.category.toLowerCase().includes(q))
-  );
+  
+  let matchedProducts = products;
+  
+  if (filters.search) {
+    const q = filters.search.toLowerCase();
+    matchedProducts = matchedProducts.filter(
+      (p) =>
+        (p.name && p.name.toLowerCase().includes(q)) ||
+        (typeof p.tags === 'string'
+        ? (p.tags as string).toLowerCase().includes(q)
+        : Array.isArray(p.tags) && p.tags.some((t: string) => t.toLowerCase().includes(q))) ||
+        (p.category && p.category.toLowerCase().includes(q))
+    );
+  }
+  
+  if (filters.location) {
+    const loc = filters.location.toLowerCase();
+    matchedProducts = matchedProducts.filter((p) => p.location?.toLowerCase().includes(loc));
+  }
+  
+  if (filters.maxPrice) {
+    matchedProducts = matchedProducts.filter((p) => p.price <= filters.maxPrice);
+  }
+
+  if (filters.category) {
+    matchedProducts = matchedProducts.filter((p) => p.category?.toLowerCase() === filters.category?.toLowerCase());
+  }
+
+  // Fallback if no matches found
   if (matchedProducts.length === 0) {
     matchedProducts = products.slice(0, 6);
   }
-  return matchedProducts.slice(0, 6).map((p) => {
+  
+  // Here we simulate the "Supplier Recommendation Engine" by ranking them based on supplier rating and price.
+  // We sort by highest rating, then lowest price.
+  const mapped = matchedProducts.map((p) => {
     const supplier = suppliers.find((s) => s.id === p.supplierId);
     return {
       product: p.name,
       supplier: p.supplierName,
-      supplierRating: supplier?.rating || p.rating,
+      supplierRating: supplier?.rating || p.rating || 4.0,
       price: p.price,
       priceUnit: p.priceUnit,
       leadTimeDays: p.leadTimeDays,
@@ -301,6 +326,19 @@ export async function aiSearch(query: string) {
       o3Assured: supplier?.o3Assured || false,
     };
   });
+  
+  // Supplier Recommendation Algorithm (Mocked in frontend for POC)
+  mapped.sort((a, b) => {
+    // 1. O3 Assured gets priority
+    if (a.o3Assured && !b.o3Assured) return -1;
+    if (!a.o3Assured && b.o3Assured) return 1;
+    // 2. Rating
+    if (b.supplierRating !== a.supplierRating) return b.supplierRating - a.supplierRating;
+    // 3. Price
+    return a.price - b.price;
+  });
+
+  return mapped.slice(0, 6);
 }
 
 // ─── Price Intelligence ──────────────────────────────────────────────────────
@@ -379,5 +417,35 @@ export async function uploadDocument(data: Partial<Document>): Promise<Document>
   return fetchAPI<Document>("/documents", {
     method: "POST",
     body: JSON.stringify(data),
+  });
+}
+
+// ─── AI Endpoints ────────────────────────────────────────────────────────────
+
+export async function parseRfqText(prompt: string) {
+  return fetchAPI<any>("/ai/parse-rfq", {
+    method: "POST",
+    body: JSON.stringify({ prompt }),
+  });
+}
+
+export async function parseSearchQuery(prompt: string) {
+  return fetchAPI<any>("/ai/parse-search", {
+    method: "POST",
+    body: JSON.stringify({ prompt }),
+  });
+}
+
+export async function chatWithAI(message: string, buyerId: string = "b1") {
+  return fetchAPI<{ reply: string }>("/ai/chat", {
+    method: "POST",
+    body: JSON.stringify({ message, buyerId }),
+  });
+}
+
+export async function sdsRagChat(chemical: string, query: string) {
+  return fetchAPI<{ reply: string }>("/ai/sds-rag", {
+    method: "POST",
+    body: JSON.stringify({ chemical, query }),
   });
 }
