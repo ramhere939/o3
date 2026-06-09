@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FlaskConical, Send, Loader2, AlertTriangle, Shield, Package } from "lucide-react";
+import { FlaskConical, Send, Loader2, AlertTriangle, Shield, Package, MessageSquare } from "lucide-react";
 import { PageHeader, SectionCard } from "@/components/shared/UIHelpers";
+import { sdsRagChat } from "@/lib/mock-api";
 
 const CHEMICALS = [
   "Hydrochloric Acid (HCl 33%)",
@@ -73,13 +74,42 @@ export default function SDSAssistant() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SDSResult | null>(null);
 
+  // RAG Chat State
+  const [chatInput, setChatInput] = useState("");
+  const [chatMessages, setChatMessages] = useState<{ role: 'ai' | 'user', text: string }[]>([]);
+  const [isChatting, setIsChatting] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [chatMessages, isChatting]);
+
   const handleSearch = async () => {
     if (!query.trim()) return;
     setLoading(true);
     await new Promise((r) => setTimeout(r, 1500));
     const matched = CHEMICALS.find((c) => c.toLowerCase().includes(query.toLowerCase()));
     setResult(generateSDS(matched || query));
+    setChatMessages([{ role: 'ai', text: `I have analyzed the SDS for ${matched || query}. Ask me any questions about handling, storage, or safety!` }]);
     setLoading(false);
+  };
+
+  const handleChat = async () => {
+    if (!chatInput.trim() || !result) return;
+    const userMsg = chatInput.trim();
+    setChatInput("");
+    setChatMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+    setIsChatting(true);
+    try {
+      const response = await sdsRagChat(result.chemical, userMsg);
+      setChatMessages(prev => [...prev, { role: 'ai', text: response.reply }]);
+    } catch (e) {
+      setChatMessages(prev => [...prev, { role: 'ai', text: "Error fetching response." }]);
+    } finally {
+      setIsChatting(false);
+    }
   };
 
   return (
@@ -200,6 +230,46 @@ export default function SDSAssistant() {
               <p className="text-xs text-amber-700">
                 ⚠️ This is AI-generated guidance. Always refer to the official SDS from the chemical manufacturer for regulatory compliance.
               </p>
+            </div>
+          </SectionCard>
+
+          {/* RAG Chat Section */}
+          <SectionCard title="Ask the Document (AI RAG)">
+            <div className="flex flex-col h-80 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
+              <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+                {chatMessages.map((msg, i) => (
+                  <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap ${
+                      msg.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-sm' : 'bg-white border border-slate-200 text-slate-700 rounded-tl-sm'
+                    }`}>
+                      {msg.text}
+                    </div>
+                  </div>
+                ))}
+                {isChatting && (
+                  <div className="flex justify-start">
+                    <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-sm px-4 py-2 text-sm text-slate-500 flex items-center gap-1.5">
+                      <Loader2 className="w-4 h-4 animate-spin text-indigo-500" /> Thinking...
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="p-3 bg-white border-t border-slate-200 flex items-center gap-2">
+                <input
+                  value={chatInput}
+                  onChange={e => setChatInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleChat()}
+                  placeholder="e.g. What should I do if this touches my skin?"
+                  className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <button
+                  onClick={handleChat}
+                  disabled={!chatInput.trim() || isChatting}
+                  className="bg-indigo-600 text-white p-2.5 rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors shrink-0"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </SectionCard>
         </motion.div>
