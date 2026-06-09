@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sidebar } from "./Sidebar";
 import { Navbar } from "./Navbar";
+import { AIAssistant } from "../shared/AIAssistant";
 
 export function AppShell() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -16,7 +17,7 @@ export function AppShell() {
       />
 
       {/* Main area */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden relative">
         <Navbar />
 
         <main className="flex-1 overflow-y-auto">
@@ -33,6 +34,7 @@ export function AppShell() {
             </motion.div>
           </AnimatePresence>
         </main>
+        <AIAssistant />
       </div>
     </div>
   );

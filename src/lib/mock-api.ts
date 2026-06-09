@@ -60,8 +60,8 @@ export async function getProducts(filters?: {
       (p) =>
         (p.name && p.name.toLowerCase().includes(q)) ||
         (p.casNumber && p.casNumber.toLowerCase().includes(q)) ||
-        (typeof p.tags === 'string' 
-          ? p.tags.toLowerCase().includes(q) 
+        (typeof p.tags === 'string'
+          ? p.tags.toLowerCase().includes(q)
           : Array.isArray(p.tags) && p.tags.some((t: string) => t.toLowerCase().includes(q)))
     );
   }
@@ -133,7 +133,7 @@ export async function getRFQs(filters?: {
   const params = new URLSearchParams();
   if (filters?.buyerId) params.append("buyerId", filters.buyerId);
   if (filters?.status) params.append("status", filters.status);
-  
+
   return fetchAPI<RFQ[]>(`/rfqs?${params.toString()}`);
 }
 
@@ -159,7 +159,7 @@ export async function getQuotes(filters?: {
   const params = new URLSearchParams();
   if (filters?.rfqId) params.append("rfqId", filters.rfqId);
   if (filters?.supplierId) params.append("supplierId", filters.supplierId);
-  
+
   let quotes = await fetchAPI<Quote[]>(`/quotes?${params.toString()}`);
   if (filters?.status) {
     quotes = quotes.filter((q) => q.status === filters.status);
@@ -193,7 +193,7 @@ export async function getOrders(filters?: {
   const params = new URLSearchParams();
   if (filters?.buyerId) params.append("buyerId", filters.buyerId);
   if (filters?.supplierId) params.append("supplierId", filters.supplierId);
-  
+
   let orders = await fetchAPI<Order[]>(`/orders?${params.toString()}`);
   if (filters?.status) {
     orders = orders.filter((o) => o.status === filters.status);
@@ -239,7 +239,7 @@ export async function getBuyerDashboardStats(buyerId = "b1") {
     fetchAPI<RFQ[]>(`/rfqs?buyerId=${buyerId}`),
     fetchAPI<Order[]>(`/orders?buyerId=${buyerId}`)
   ]);
-  
+
   const activeRFQs = rfqs.filter(
     (r) => r.status === "sent" || r.status === "viewed"
   ).length;
@@ -255,7 +255,7 @@ export async function getSupplierDashboardStats(supplierId = "s1") {
     fetchAPI<Order[]>(`/orders?supplierId=${supplierId}`),
     fetchAPI<RFQ[]>('/rfqs')
   ]);
-  
+
   const openRFQs = allRfqs.filter(
     (r) => r.status === "sent" || r.status === "viewed"
   ).length;
@@ -280,8 +280,8 @@ export async function aiSearch(query: string) {
   let matchedProducts = products.filter(
     (p) =>
       (p.name && p.name.toLowerCase().includes(q.split(" ").find((w) => w.length > 4) || q)) ||
-      (typeof p.tags === 'string' 
-        ? p.tags.toLowerCase().includes(q) 
+      (typeof p.tags === 'string'
+        ? p.tags.toLowerCase().includes(q)
         : Array.isArray(p.tags) && p.tags.some((t: string) => q.includes(t.toLowerCase()))) ||
       (p.category && p.category.toLowerCase().includes(q))
   );

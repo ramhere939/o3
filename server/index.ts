@@ -3,6 +3,9 @@ import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 const prisma = new PrismaClient();
 const app = express();
@@ -299,6 +302,96 @@ app.get('/api/quotes/:id/messages', async (req, res) => {
     res.json(messages);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch messages" });
+  }
+});
+
+// --- AI Endpoints ---
+
+app.post('/api/ai/parse-rfq', async (req, res) => {
+  const { prompt } = req.body;
+  if (!prompt) return res.status(400).json({ error: "Prompt is required" });
+  
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const systemPrompt = `You are a procurement assistant. Extract the following from the user's text to auto-fill an RFQ. 
+Return ONLY a valid JSON object with the following keys, and use null if a field is not found:
+{
+  "productName": "string",
+  "quantity": number (in MT, convert if necessary),
+  "deliveryLocation": "string (city or pincode)",
+  "deliveryDate": "YYYY-MM-DD (convert relative dates like 'next week' to a real date based on today's date: ${new Date().toISOString()})"
+}
+Do not return markdown formatting, just the raw JSON string.`;
+
+    const result = await model.generateContent(systemPrompt + "\nUser text: " + prompt);
+    const jsonStr = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+    res.json(JSON.parse(jsonStr));
+  } catch (error) {
+    console.error("AI parse error:", error);
+    res.status(500).json({ error: "Failed to parse RFQ" });
+  }
+});
+
+app.post('/api/ai/parse-search', async (req, res) => {
+  const { prompt } = req.body;
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const systemPrompt = `You are an AI assistant. Parse the user's B2B marketplace search query into structured filters.
+Return ONLY valid JSON:
+{
+  "search": "string (product name or chemical, or null)",
+  "location": "string (or null)",
+  "maxPrice": number (or null),
+  "category": "string (or null)"
+}`;
+    const result = await model.generateContent(systemPrompt + "\nUser query: " + prompt);
+    const jsonStr = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+    res.json(JSON.parse(jsonStr));
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to parse search" });
+  }
+});
+
+app.post('/api/ai/chat', async (req, res) => {
+  const { message, buyerId } = req.body;
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    
+    let orderContext = "";
+    if (buyerId) {
+      const orders = await prisma.order.findMany({
+        where: { buyerId: String(buyerId) },
+        include: { shipmentEvents: true },
+        take: 5,
+        orderBy: { createdAt: 'desc' }
+      });
+      orderContext = "User's Recent Orders Data:\n" + JSON.stringify(orders, null, 2);
+    }
+
+    const systemPrompt = `You are O3's AI assistant for a B2B chemical procurement marketplace.
+Answer questions helpfully. Keep answers concise and strictly related to procurement.
+If the user asks to "track my order", "where is my order", or asks about their orders, use the following recent order data to answer them intelligently:
+${orderContext}`;
+    
+    const result = await model.generateContent(systemPrompt + "\nUser: " + message);
+    res.json({ reply: result.response.text() });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to generate reply" });
+  }
+});
+
+app.post('/api/ai/sds-rag', async (req, res) => {
+  const { chemical, query } = req.body;
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const systemPrompt = `You are a Safety Data Sheet (SDS) assistant. The user has uploaded an SDS document for "${chemical}".
+Since we cannot actually read the PDF in this POC, use your internal knowledge base to answer the user's query as if you are reading from the official SDS document for ${chemical}. Provide a helpful, precise, and safety-focused response.`;
+    
+    const result = await model.generateContent(systemPrompt + "\nUser Question: " + query);
+    res.json({ reply: result.response.text() });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to generate RAG response" });
   }
 });
 

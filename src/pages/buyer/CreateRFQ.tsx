@@ -6,16 +6,18 @@ import { motion } from "framer-motion";
 import { CheckCircle, ArrowLeft, FlaskConical } from "lucide-react";
 import { rfqSchema, type RFQInput } from "@/lib/validations";
 import { PageHeader, SectionCard } from "@/components/shared/UIHelpers";
-import { createRFQ } from "@/lib/mock-api";
+import { createRFQ, parseRfqText } from "@/lib/mock-api";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function CreateRFQ() {
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const [submitted, setSubmitted] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [isParsing, setIsParsing] = useState(false);
   const navigate = useNavigate();
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<RFQInput>({
+  const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<RFQInput>({
     resolver: zodResolver(rfqSchema),
     defaultValues: {
       productName: searchParams.get("product") || "",
@@ -38,6 +40,22 @@ export default function CreateRFQ() {
     queryClient.invalidateQueries({ queryKey: ["rfqs"] });
     queryClient.invalidateQueries({ queryKey: ["open-rfqs"] });
     setSubmitted(true);
+  };
+
+  const handleAiFill = async () => {
+    if (!aiPrompt) return;
+    setIsParsing(true);
+    try {
+      const parsed = await parseRfqText(aiPrompt);
+      if (parsed.productName) setValue("productName", parsed.productName, { shouldValidate: true });
+      if (parsed.quantity) setValue("quantity", parsed.quantity, { shouldValidate: true });
+      if (parsed.deliveryLocation) setValue("deliveryLocation", parsed.deliveryLocation, { shouldValidate: true });
+      if (parsed.deliveryDate) setValue("deliveryDate", parsed.deliveryDate, { shouldValidate: true });
+    } catch (err) {
+      console.error("AI parse failed", err);
+    } finally {
+      setIsParsing(false);
+    }
   };
 
   if (submitted) {
@@ -86,6 +104,27 @@ export default function CreateRFQ() {
           </button>
         }
       />
+
+      <SectionCard title="AI Copilot" className="mb-4 border-indigo-200 bg-indigo-50/30">
+        <div className="flex gap-3 items-start">
+          <div className="flex-1">
+            <textarea 
+              value={aiPrompt}
+              onChange={e => setAiPrompt(e.target.value)}
+              placeholder="e.g. I need 50 MT of Titanium Dioxide delivered to Mumbai next week."
+              className="w-full px-4 py-2.5 border border-indigo-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+              rows={2}
+            />
+          </div>
+          <button 
+            onClick={handleAiFill}
+            disabled={isParsing || !aiPrompt}
+            className="bg-indigo-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-indigo-700 disabled:bg-indigo-300 transition-colors flex items-center shrink-0"
+          >
+            {isParsing ? "Analyzing..." : "Auto-Fill with AI"}
+          </button>
+        </div>
+      </SectionCard>
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <SectionCard title="Product Details" className="mb-4">
