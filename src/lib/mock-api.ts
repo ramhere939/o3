@@ -422,10 +422,10 @@ export async function uploadDocument(data: Partial<Document>): Promise<Document>
 
 // ─── AI Endpoints ────────────────────────────────────────────────────────────
 
-export async function parseRfqText(prompt: string) {
+export async function parseRfqText(prompt: string, file?: { data: string, mimeType: string }) {
   return fetchAPI<any>("/ai/parse-rfq", {
     method: "POST",
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ prompt, file }),
   });
 }
 
