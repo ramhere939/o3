@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { CheckCircle, ArrowLeft, FlaskConical } from "lucide-react";
+import { CheckCircle, ArrowLeft, FlaskConical, Paperclip, X } from "lucide-react";
 import { rfqSchema, type RFQInput } from "@/lib/validations";
 import { PageHeader, SectionCard } from "@/components/shared/UIHelpers";
 import { createRFQ, parseRfqText } from "@/lib/mock-api";
@@ -15,6 +15,8 @@ export default function CreateRFQ() {
   const [submitted, setSubmitted] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
   const [isParsing, setIsParsing] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<RFQInput>({
@@ -43,12 +45,29 @@ export default function CreateRFQ() {
   };
 
   const handleAiFill = async () => {
-    if (!aiPrompt) return;
+    if (!aiPrompt && !selectedFile) return;
     setIsParsing(true);
     try {
-      const parsed = await parseRfqText(aiPrompt);
+      let fileData: { data: string, mimeType: string } | undefined = undefined;
+      if (selectedFile) {
+        const reader = new FileReader();
+        const base64Promise = new Promise<string>((resolve) => {
+          reader.onload = () => resolve((reader.result as string).split(',')[1]);
+        });
+        reader.readAsDataURL(selectedFile);
+        const base64Data = await base64Promise;
+        fileData = { data: base64Data, mimeType: selectedFile.type };
+      }
+
+      const parsed = await parseRfqText(aiPrompt, fileData);
       if (parsed.productName) setValue("productName", parsed.productName, { shouldValidate: true });
+      if (parsed.grade) setValue("grade", parsed.grade, { shouldValidate: true });
+      if (parsed.casNumber) setValue("casNumber", parsed.casNumber, { shouldValidate: true });
       if (parsed.quantity) setValue("quantity", parsed.quantity, { shouldValidate: true });
+      if (parsed.quantityUnit) setValue("quantityUnit", parsed.quantityUnit, { shouldValidate: true });
+      if (parsed.targetPrice) setValue("targetPrice", parsed.targetPrice, { shouldValidate: true });
+      if (parsed.paymentTerms) setValue("paymentTerms", parsed.paymentTerms, { shouldValidate: true });
+      if (parsed.notes) setValue("notes", parsed.notes, { shouldValidate: true });
       if (parsed.deliveryLocation) setValue("deliveryLocation", parsed.deliveryLocation, { shouldValidate: true });
       if (parsed.deliveryDate) setValue("deliveryDate", parsed.deliveryDate, { shouldValidate: true });
     } catch (err) {
@@ -106,23 +125,49 @@ export default function CreateRFQ() {
       />
 
       <SectionCard title="AI Copilot" className="mb-4 border-indigo-200 bg-indigo-50/30">
-        <div className="flex gap-3 items-start">
-          <div className="flex-1">
-            <textarea 
-              value={aiPrompt}
-              onChange={e => setAiPrompt(e.target.value)}
-              placeholder="e.g. I need 50 MT of Titanium Dioxide delivered to Mumbai next week."
-              className="w-full px-4 py-2.5 border border-indigo-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-              rows={2}
-            />
+        <div className="flex flex-col gap-3">
+          <div className="flex gap-3 items-start">
+            <div className="flex-1 relative">
+              <textarea 
+                value={aiPrompt}
+                onChange={e => setAiPrompt(e.target.value)}
+                placeholder="e.g. I need 50 MT of Titanium Dioxide delivered to Mumbai next week. Or attach a document..."
+                className="w-full px-4 py-2.5 border border-indigo-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none pr-12"
+                rows={2}
+              />
+              <button 
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute right-3 bottom-3 text-indigo-400 hover:text-indigo-600 transition-colors"
+                title="Attach Document"
+              >
+                <Paperclip className="w-5 h-5" />
+              </button>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={(e) => e.target.files && setSelectedFile(e.target.files[0])}
+                className="hidden" 
+                accept="application/pdf,image/*,.doc,.docx"
+              />
+            </div>
+            <button 
+              type="button"
+              onClick={handleAiFill}
+              disabled={isParsing || (!aiPrompt && !selectedFile)}
+              className="bg-indigo-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-indigo-700 disabled:bg-indigo-300 transition-colors flex items-center shrink-0 h-[62px]"
+            >
+              {isParsing ? "Analyzing..." : "Auto-Fill with AI"}
+            </button>
           </div>
-          <button 
-            onClick={handleAiFill}
-            disabled={isParsing || !aiPrompt}
-            className="bg-indigo-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-indigo-700 disabled:bg-indigo-300 transition-colors flex items-center shrink-0"
-          >
-            {isParsing ? "Analyzing..." : "Auto-Fill with AI"}
-          </button>
+          {selectedFile && (
+            <div className="flex items-center gap-2 text-sm text-slate-600 bg-white/60 px-3 py-1.5 rounded-lg border border-indigo-100 w-fit">
+              <span className="truncate max-w-[200px] font-medium">{selectedFile.name}</span>
+              <button type="button" onClick={() => setSelectedFile(null)} className="text-slate-400 hover:text-rose-500">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       </SectionCard>
 

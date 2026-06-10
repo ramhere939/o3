@@ -40,7 +40,8 @@ io.on("connection", (socket) => {
   });
 });
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Users
 app.get('/api/users', async (req, res) => {
@@ -308,22 +309,39 @@ app.get('/api/quotes/:id/messages', async (req, res) => {
 // --- AI Endpoints ---
 
 app.post('/api/ai/parse-rfq', async (req, res) => {
-  const { prompt } = req.body;
-  if (!prompt) return res.status(400).json({ error: "Prompt is required" });
+  const { prompt, file } = req.body;
+  if (!prompt && !file) return res.status(400).json({ error: "Prompt or document is required" });
   
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    const systemPrompt = `You are a procurement assistant. Extract the following from the user's text to auto-fill an RFQ. 
+    const systemPrompt = `You are a procurement assistant. Extract the following from the user's input/document to auto-fill an RFQ. 
 Return ONLY a valid JSON object with the following keys, and use null if a field is not found:
 {
-  "productName": "string",
-  "quantity": number (in MT, convert if necessary),
+  "productName": "string (just the product name, exclude the grade if present)",
+  "grade": "string (the grade of the product, e.g. Battery Grade, Rutile Grade, Technical, etc.)",
+  "casNumber": "string (the CAS number if mentioned, e.g. 13463-67-7)",
+  "quantity": number (just the numerical amount)",
+  "quantityUnit": "string (MUST be one of these exact strings: kg, mt, litre, drum, bag. Convert to these if necessary, e.g. Metric Tons = mt, Litres = litre)",
+  "targetPrice": number (the target price in numbers if mentioned)",
+  "paymentTerms": "string (MUST be one of: advance, net_30, net_60, lc, cad. Default to net_30 if unsure)",
+  "notes": "string (any additional notes, requirements, or penalties mentioned)",
   "deliveryLocation": "string (city or pincode)",
   "deliveryDate": "YYYY-MM-DD (convert relative dates like 'next week' to a real date based on today's date: ${new Date().toISOString()})"
 }
 Do not return markdown formatting, just the raw JSON string.`;
 
-    const result = await model.generateContent(systemPrompt + "\nUser text: " + prompt);
+    const contents: any[] = [systemPrompt + "\nUser text: " + (prompt || "Extract RFQ details from the attached document.")];
+    
+    if (file && file.data && file.mimeType) {
+      contents.push({
+        inlineData: {
+          data: file.data,
+          mimeType: file.mimeType
+        }
+      });
+    }
+
+    const result = await model.generateContent(contents);
     const jsonStr = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
     res.json(JSON.parse(jsonStr));
   } catch (error) {
