@@ -51,7 +51,17 @@ export default function SupplierQuoteNegotiate() {
     fetch(`/api/quotes/${quoteId}/messages`)
       .then(res => res.json())
       .then(data => {
-        if(Array.isArray(data)) setMessages(data);
+        if(Array.isArray(data)) {
+          const existingStr = localStorage.getItem("o3_mock_messages");
+          const mockMessages = existingStr ? JSON.parse(existingStr) : [];
+          const formattedMocks = mockMessages.map((m: any) => ({
+            id: m.id.toString(),
+            sender: m.isSender ? "buyer" : "supplier",
+            text: m.text,
+            timestamp: new Date().toISOString()
+          }));
+          setMessages([...formattedMocks, ...data]);
+        }
       })
       .catch(console.error);
 

@@ -32,7 +32,6 @@ import { useState } from "react";
 const buyerNav = [
   { label: "Dashboard", icon: LayoutDashboard, to: "/buyer/dashboard" },
   { label: "AI Search", icon: Sparkles, to: "/buyer/search" },
-  { label: "Product Catalog", icon: Package, to: "/buyer/catalog" },
   { label: "Create RFQ", icon: FileText, to: "/buyer/rfq/create" },
   { label: "RFQ Tracker", icon: GitPullRequest, to: "/buyer/rfq/tracker" },
   { label: "Compare Quotes", icon: Scale, to: "/buyer/quotes/compare" },

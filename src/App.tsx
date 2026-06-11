@@ -10,7 +10,12 @@ import KycWizard from "./pages/kyc/KycWizard";
 
 // Buyer Pages
 import BuyerDashboard from "./pages/buyer/BuyerDashboard";
+import BuyerMessages from "./pages/buyer/BuyerMessages";
 import ProductCatalog from "./pages/buyer/ProductCatalog";
+import ProductDetails from "./pages/buyer/ProductDetails";
+import BuyerCart from "./pages/buyer/BuyerCart";
+import BuyerFavorites from "./pages/buyer/BuyerFavorites";
+import BuyerAccount from "./pages/buyer/BuyerAccount";
 import AISearchHub from "./pages/buyer/AISearchHub";
 import CreateRFQ from "./pages/buyer/CreateRFQ";
 import RFQTracker from "./pages/buyer/RFQTracker";
@@ -51,7 +56,12 @@ function AppRoutes() {
       <Route element={<AppShell />}>
         {/* Buyer Routes */}
         <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
+        <Route path="/buyer/messages" element={<BuyerMessages />} />
         <Route path="/buyer/catalog" element={<ProductCatalog />} />
+        <Route path="/buyer/product/:id" element={<ProductDetails />} />
+        <Route path="/buyer/cart" element={<BuyerCart />} />
+        <Route path="/buyer/favorites" element={<BuyerFavorites />} />
+        <Route path="/buyer/account" element={<BuyerAccount />} />
         <Route path="/buyer/search" element={<AISearchHub />} />
         <Route path="/buyer/rfq/create" element={<CreateRFQ />} />
         <Route path="/buyer/rfq/tracker" element={<RFQTracker />} />

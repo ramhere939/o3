@@ -29,7 +29,7 @@ export default function Login() {
   const onSubmit = async (data: LoginInput) => {
     await new Promise((r) => setTimeout(r, 800));
     setRole(data.role as UserRole);
-    navigate(data.role === "buyer" ? "/buyer/dashboard" : "/supplier/dashboard");
+    navigate(data.role === "buyer" ? "/buyer/catalog" : "/supplier/dashboard");
   };
 
   return (
