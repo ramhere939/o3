@@ -10,7 +10,7 @@ export function AppShell() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const location = useLocation();
-  const hideSidebar = location.pathname === "/buyer/catalog" || location.pathname === "/buyer/messages" || location.pathname === "/buyer/dashboard" || location.pathname.startsWith("/buyer/product/");
+  const hideSidebar = location.pathname === "/buyer/catalog" || location.pathname === "/buyer/messages" || location.pathname.startsWith("/buyer/product/");
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">

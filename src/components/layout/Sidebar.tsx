@@ -44,20 +44,8 @@ const buyerNav = [
   { label: "RFQ Tracker", icon: GitPullRequest, to: "/buyer/rfq/tracker" },
   { label: "Compare Quotes", icon: Scale, to: "/buyer/quotes/compare" },
   { label: "Negotiate", icon: MessageSquare, to: "/buyer/quotes/negotiate" },
-];
-
-const buyerOnlineTrading = [
-  { label: "Messages", icon: MessageSquare, to: "/buyer/messages" },
-  { label: "Purchase Orders", icon: ShoppingCart, to: "/buyer/orders" },
-  { label: "Payment", icon: DollarSign, to: "/buyer/dashboard?tab=payment" },
-  { label: "Saved & history", icon: Clock, to: "/buyer/dashboard?tab=saved" },
-];
-
-const buyerAddons = [
   { label: "Shipment Tracking", icon: Truck, to: "/buyer/shipments" },
   { label: "Documents Vault", icon: FolderOpen, to: "/buyer/documents" },
-  { label: "Subscription", icon: Zap, to: "/buyer/dashboard?tab=subscription" },
-  { label: "Logistics services", icon: Package, to: "/buyer/dashboard?tab=logistics" },
 ];
 
 const supplierNav = [
@@ -133,25 +121,6 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           isActive={isActive}
           isSupplier={isSupplier}
         />
-
-        {user.role === "buyer" && (
-          <>
-            <NavSection
-              label="Online Trading"
-              items={buyerOnlineTrading}
-              collapsed={collapsed}
-              isActive={isActive}
-              isSupplier={isSupplier}
-            />
-            <NavSection
-              label="Add-on Services"
-              items={buyerAddons}
-              collapsed={collapsed}
-              isActive={isActive}
-              isSupplier={isSupplier}
-            />
-          </>
-        )}
 
         {/* Global nav */}
         <NavSection

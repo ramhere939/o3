@@ -2,9 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  Package, Clock, AlertCircle, Eye, TrendingUp, GitPullRequest, Scale, ShoppingCart, Truck, Folder,
-  ChevronRight, FileText, MessageSquare, ClipboardList, DollarSign, Zap,
-  BarChart2, FlaskConical, BookOpen, Bell
+  FileText, ChevronRight, MessageSquare
 } from "lucide-react";
 import { getBuyerDashboardStats, getOrders } from "@/lib/mock-api";
 
@@ -31,39 +29,6 @@ export default function BuyerDashboard() {
   const activeTab = queryParams.get("tab") || "dashboard";
   const navigate = useNavigate();
 
-  const handleSidebarClick = (item: any) => {
-    if (item.isRoute) {
-      navigate(item.id);
-    } else {
-      navigate(`/buyer/dashboard${item.id === 'dashboard' ? '' : `?tab=${item.id}`}`);
-    }
-  };
-
-  const SIDEBAR_ITEMS = [
-    { id: "dashboard", label: "Dashboard", icon: Package },
-    { id: "/buyer/search", label: "AI Search", icon: TrendingUp, isRoute: true },
-    { id: "/buyer/rfq/create", label: "Create RFQ", icon: FileText, isRoute: true },
-    { id: "/buyer/rfq/tracker", label: "RFQ Tracker", icon: GitPullRequest, isRoute: true },
-    { id: "/buyer/quotes/compare", label: "Compare Quotes", icon: Scale, isRoute: true },
-    { id: "/buyer/quotes/negotiate", label: "Negotiate", icon: MessageSquare, isRoute: true },
-    { id: "/buyer/orders", label: "Purchase Orders", icon: ShoppingCart, isRoute: true },
-    { id: "/buyer/shipments", label: "Shipment Tracking", icon: Truck, isRoute: true },
-    { id: "/buyer/documents", label: "Documents Vault", icon: Folder, isRoute: true },
-    
-    { id: "messages", label: "Messages", icon: MessageSquare, isCategory: true, categoryName: "Online trading" },
-    { id: "orders", label: "Orders", icon: ClipboardList },
-    { id: "payment", label: "Payment", icon: DollarSign },
-    { id: "saved", label: "Saved & history", icon: Clock },
-    { id: "subscription", label: "Subscription", icon: Zap, isCategory: true, categoryName: "Add-on services", badge: "New" },
-    { id: "logistics", label: "Logistics services", icon: Package },
-    
-    { id: "/buyer/search", label: "AI Tools", icon: TrendingUp, isCategory: true, categoryName: "Platform", isRoute: true },
-    { id: "/price-intelligence", label: "Price Intelligence", icon: BarChart2, isRoute: true },
-    { id: "/sds-assistant", label: "SDS Assistant", icon: FlaskConical, isRoute: true },
-    { id: "/content-hub", label: "Content Hub", icon: BookOpen, isRoute: true },
-    { id: "/notifications", label: "Notifications", icon: Bell, isRoute: true },
-  ];
-
   const ORDER_TABS = ["All", "Confirming", "Unpaid", "Preparing to ship", "Delivering", "Refunds & after-sales"];
   const [activeOrderTab, setActiveOrderTab] = useState("All");
 
@@ -74,33 +39,6 @@ export default function BuyerDashboard() {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Left Sidebar */}
-        <div className="w-full lg:w-56 flex-shrink-0">
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden sticky top-20 py-2">
-            {SIDEBAR_ITEMS.map((item, index) => (
-              <div key={item.id}>
-                {item.isCategory && (
-                  <div className="px-5 py-3 text-xs font-medium text-slate-400 mt-2">
-                    {item.categoryName}
-                  </div>
-                )}
-                <button
-                  onClick={() => handleSidebarClick(item)}
-                  className={`w-full flex items-center justify-between px-5 py-2.5 text-sm transition-colors ${
-                    activeTab === item.id || location.pathname === item.id ? "text-indigo-600 font-bold bg-indigo-50/50" : "text-slate-600 hover:bg-slate-50"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <item.icon className="w-4 h-4" />
-                    {item.label}
-                  </div>
-                  {item.id !== "dashboard" && <ChevronRight className="w-3 h-3 text-slate-300" />}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* Main Content */}
         <div className="flex-1 space-y-6">
           {activeTab === "orders" ? (
