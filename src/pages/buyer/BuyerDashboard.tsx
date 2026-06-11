@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Package, Clock, AlertCircle, Eye, TrendingUp, GitPullRequest, Scale, ShoppingCart, Truck, Folder,
-  ChevronRight, FileText, MessageSquare, ClipboardList, DollarSign, Zap
+  ChevronRight, FileText, MessageSquare, ClipboardList, DollarSign, Zap,
+  BarChart2, FlaskConical, BookOpen, Bell
 } from "lucide-react";
 import { getBuyerDashboardStats, getOrders } from "@/lib/mock-api";
 
@@ -55,6 +56,12 @@ export default function BuyerDashboard() {
     { id: "saved", label: "Saved & history", icon: Clock },
     { id: "subscription", label: "Subscription", icon: Zap, isCategory: true, categoryName: "Add-on services", badge: "New" },
     { id: "logistics", label: "Logistics services", icon: Package },
+    
+    { id: "/buyer/search", label: "AI Tools", icon: TrendingUp, isCategory: true, categoryName: "Platform", isRoute: true },
+    { id: "/price-intelligence", label: "Price Intelligence", icon: BarChart2, isRoute: true },
+    { id: "/sds-assistant", label: "SDS Assistant", icon: FlaskConical, isRoute: true },
+    { id: "/content-hub", label: "Content Hub", icon: BookOpen, isRoute: true },
+    { id: "/notifications", label: "Notifications", icon: Bell, isRoute: true },
   ];
 
   const ORDER_TABS = ["All", "Confirming", "Unpaid", "Preparing to ship", "Delivering", "Refunds & after-sales"];

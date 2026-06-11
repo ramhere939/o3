@@ -64,10 +64,7 @@ export default function ProductCatalog() {
           <p className="text-indigo-200 mb-10 text-sm md:text-base">Connect with 2,000+ certified suppliers and secure trade assurance on all your bulk chemical orders.</p>
 
           <div className="bg-white p-2 rounded-xl shadow-2xl">
-            <div className="flex gap-4 mb-2 px-2 pt-2">
-              <button className="text-sm font-bold text-indigo-600 border-b-2 border-indigo-600 pb-1">Products</button>
-              <button className="text-sm font-medium text-slate-500 hover:text-indigo-600 pb-1">Manufacturers</button>
-            </div>
+
             <div className="flex gap-2">
               <div className="flex-1 relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -145,7 +142,15 @@ export default function ProductCatalog() {
             <h2 className="text-xl font-bold text-slate-900">
               {category ? `${category} Products` : "Recommended Products"}
             </h2>
-            <span className="text-sm text-slate-500">{products?.length ?? 0} results</span>
+            <div className="flex items-center gap-4">
+              <Link
+                to="/buyer/rfq/create"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors shadow-sm"
+              >
+                Create RFQ
+              </Link>
+              <span className="text-sm text-slate-500">{products?.length ?? 0} results</span>
+            </div>
           </div>
 
           {isLoading ? (
@@ -176,17 +181,27 @@ export default function ProductCatalog() {
                   transition={{ delay: Math.min(i * 0.02, 0.2) }}
                   className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-xl hover:border-indigo-200 transition-all group flex flex-col h-full"
                 >
-                  <Link to={`/buyer/product/${product.id}`} className="block">
+                  <Link to={`/buyer/product/${product.id}`} state={{ product }} className="block">
                     <div className="h-40 bg-slate-100 flex items-center justify-center relative overflow-hidden group-hover:bg-slate-200 transition-colors">
-                      <div className="absolute top-2 right-2 bg-white/90 backdrop-blur px-2 py-1 rounded text-[10px] font-bold text-slate-600 flex items-center gap-1">
+                      <div className="absolute top-2 right-2 bg-white/90 backdrop-blur px-2 py-1 rounded z-10 text-[10px] font-bold text-slate-600 flex items-center gap-1">
                         <Star className="w-3 h-3 text-amber-500 fill-amber-500" /> {product.rating}
                       </div>
-                      <Package className="w-12 h-12 text-slate-300" />
+                      <img 
+                        src={[
+                          "/chemicals/c1.jpg",
+                          "/chemicals/c2.jpg",
+                          "/chemicals/c3.jpg",
+                          "/chemicals/c4.avif",
+                          "/chemicals/c5.jpg"
+                        ][(String(product.id).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % 5]} 
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
                     </div>
                   </Link>
 
                   <div className="p-4 flex flex-col flex-1">
-                    <Link to={`/buyer/product/${product.id}`} className="block mb-1">
+                    <Link to={`/buyer/product/${product.id}`} state={{ product }} className="block mb-1">
                       <h3 className="font-bold text-slate-900 leading-snug line-clamp-2 group-hover:text-indigo-600 transition-colors">
                         {product.name}
                       </h3>
@@ -211,13 +226,19 @@ export default function ProductCatalog() {
                         <span className="text-[10px] text-slate-500 ml-1 truncate max-w-[80px]">{product.supplierName}</span>
                       </div>
 
-                      <div className="mt-auto pt-2">
+                      <div className="mt-auto pt-2 flex items-center gap-2">
                         <button
                           onClick={() => setSelectedProduct(product)}
-                          className="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg text-sm transition-colors"
+                          className="flex-1 text-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-2 rounded-lg text-sm transition-colors border border-indigo-100"
                         >
                           Buy Now
                         </button>
+                        <Link
+                          to={`/buyer/rfq/create?product=${encodeURIComponent(product.name)}`}
+                          className="flex-1 text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg text-sm transition-colors block"
+                        >
+                          Create RFQ
+                        </Link>
                       </div>
                     </div>
                   </div>

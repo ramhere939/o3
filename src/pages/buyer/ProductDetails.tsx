@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { Star, MessageSquare, Heart, Share2, Shield, ChevronRight, Package, ThumbsUp, X, Paperclip, Zap } from "lucide-react";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
+import { Star, MessageSquare, Heart, Share2, Shield, ShieldCheck, ChevronRight, Package, PackageOpen, ThumbsUp, X, Paperclip, Zap, ChevronDown, CheckCircle2, Award, ArrowRight, Activity, Play, Smile, Image as ImageIcon, Folder, Phone, FileText, Languages } from "lucide-react";
 import { PageHeader } from "@/components/shared/UIHelpers";
 
 const MOCK_REVIEWS = [
@@ -28,31 +28,50 @@ const MOCK_REVIEWS = [
 
 export default function ProductDetails() {
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(0);
   const [showInquiryModal, setShowInquiryModal] = useState(false);
+  const [showChatWindow, setShowChatWindow] = useState(false);
   const [inquiryMessage, setInquiryMessage] = useState("");
+  const [chatInput, setChatInput] = useState("");
+  const [chatMessages, setChatMessages] = useState([
+    { id: 1, sender: 'supplier', text: 'Hello, how can I help you?', time: 'Just now' }
+  ]);
+
+  const stateProduct = location.state?.product;
+
+  const mockImages = [
+    "/chemicals/c1.jpg",
+    "/chemicals/c2.jpg",
+    "/chemicals/c3.jpg",
+    "/chemicals/c4.avif",
+    "/chemicals/c5.jpg"
+  ];
+  const prodId = stateProduct?.id || id || "1";
+  const primaryImgIdx = (String(prodId).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % 5;
+  const productImages = [
+    mockImages[primaryImgIdx],
+    mockImages[(primaryImgIdx + 1) % 5],
+    mockImages[(primaryImgIdx + 2) % 5]
+  ];
 
   // Mock product data (we could fetch this based on the ID)
   const product = {
-    id: id || "1",
-    title: "Industrial Grade Titanium Dioxide (TiO2) High Purity Rutile Grade 93% Min",
-    rating: 5.0,
+    id: prodId,
+    title: stateProduct?.name || "Industrial Grade Titanium Dioxide (TiO2) High Purity Rutile Grade 93% Min",
+    rating: stateProduct?.rating || 5.0,
     reviews: 5,
     sold: 533,
-    supplierName: "Guangzhou Lianxian Electronics Co., Ltd.",
+    supplierName: stateProduct?.supplierName || "Guangzhou Lianxian Electronics Co., Ltd.",
     supplierYears: 12,
     location: "Guangzhou, CN",
     priceTiers: [
-      { min: 1, max: 499, price: 182.56 },
-      { min: 500, max: 1199, price: 175.10 },
-      { min: 1200, max: null, price: 168.48 },
+      { min: 1, max: 499, price: stateProduct?.price || 182.56 },
+      { min: 500, max: 1199, price: stateProduct ? stateProduct.price * 0.95 : 175.10 },
+      { min: 1200, max: null, price: stateProduct ? stateProduct.price * 0.9 : 168.48 },
     ],
-    images: [
-      "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&auto=format&fit=crop&q=60",
-      "https://images.unsplash.com/photo-1616423640778-28d1b53229bd?w=800&auto=format&fit=crop&q=60",
-      "https://images.unsplash.com/photo-1565514020179-026b92b84bb6?w=800&auto=format&fit=crop&q=60",
-    ]
+    images: productImages
   };
 
   const currentPrice = quantity >= 1200 ? product.priceTiers[2].price 
@@ -82,8 +101,7 @@ export default function ProductDetails() {
             {/* Image Gallery */}
             <div className="w-full lg:w-[400px] xl:w-[450px] p-4 flex flex-col gap-4 border-r border-slate-100 flex-shrink-0">
               <div className="aspect-square bg-slate-50 rounded-xl relative overflow-hidden group border border-slate-100 flex items-center justify-center">
-                <Package className="w-32 h-32 text-slate-300" />
-                {/* <img src={product.images[0]} alt="Product" className="object-cover w-full h-full" /> */}
+                <img src={product.images[0]} alt="Product" className="object-cover w-full h-full" />
                 <div className="absolute top-4 right-4 flex flex-col gap-2">
                   <button className="w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-slate-600 hover:text-rose-500 shadow-sm transition-colors">
                     <Heart className="w-5 h-5" />
@@ -95,9 +113,9 @@ export default function ProductDetails() {
               </div>
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                 {product.images.map((img, i) => (
-                  <div key={i} className={`w-20 h-20 rounded-lg border-2 flex items-center justify-center bg-slate-50 flex-shrink-0 cursor-pointer ${i === 0 ? 'border-indigo-600' : 'border-transparent hover:border-slate-300'}`}>
-                    <Package className="w-8 h-8 text-slate-300" />
-                  </div>
+                  <button key={i} className={`w-20 h-20 rounded-lg flex-shrink-0 border-2 overflow-hidden bg-slate-50 flex items-center justify-center ${i === 0 ? 'border-indigo-600' : 'border-transparent'}`}>
+                    <img src={img} alt="Thumbnail" className="w-full h-full object-cover" />
+                  </button>
                 ))}
               </div>
 
@@ -328,29 +346,41 @@ export default function ProductDetails() {
               >
                 Send inquiry
               </button>
-              <Link
-                to="/buyer/quotes/negotiate"
+              <button
+                onClick={() => setShowChatWindow(true)}
                 className="w-full bg-white border border-slate-900 hover:bg-slate-100 text-slate-900 font-bold py-3.5 rounded-full text-center transition-colors flex items-center justify-center"
               >
                 Chat now
-              </Link>
+              </button>
               <button 
                 onClick={() => {
                   if (quantity > 0) {
-                    navigate('/buyer/cart', { 
-                      state: { 
-                        newCartItem: {
-                          id: Date.now(),
-                          supplier: product.supplierName,
-                          product: product.title,
-                          cas: "13463-67-7", // static for mock
-                          price: currentPrice,
-                          quantity: quantity,
-                          unit: "piece",
-                          total: subtotal
-                        }
-                      } 
-                    });
+                    const saved = localStorage.getItem("o3_buyer_cart");
+                    const cart = saved ? JSON.parse(saved) : [];
+                    const newItem = {
+                      id: Date.now(),
+                      supplier: product.supplierName,
+                      product: product.title,
+                      cas: "13463-67-7", // static for mock
+                      price: currentPrice,
+                      quantity: quantity,
+                      unit: "piece",
+                      total: subtotal,
+                      image: product.images[0]
+                    };
+                    
+                    // check if item already in cart
+                    const existingIdx = cart.findIndex((x: any) => x.product === newItem.product);
+                    if (existingIdx >= 0) {
+                      cart[existingIdx].quantity += quantity;
+                      cart[existingIdx].total += subtotal;
+                    } else {
+                      cart.push(newItem);
+                    }
+
+                    localStorage.setItem("o3_buyer_cart", JSON.stringify(cart));
+                    window.dispatchEvent(new Event("cartUpdated"));
+                    alert(`Added ${quantity} of ${product.title} to your cart!`);
                   } else {
                     alert("Please select a quantity first");
                   }
@@ -450,6 +480,109 @@ export default function ProductDetails() {
               >
                 Send inquiry
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Chat Window */}
+      {showChatWindow && (
+        <div className="fixed bottom-0 right-4 w-[380px] h-[550px] bg-white rounded-t-xl shadow-[0_0_20px_rgba(0,0,0,0.15)] flex flex-col z-50 border border-slate-200 overflow-hidden">
+          {/* Header */}
+          <div className="bg-indigo-600 text-white p-3 flex items-center justify-between flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center font-bold text-sm">
+                {product.supplierName.charAt(0)}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold truncate max-w-[200px]">{product.supplierName}</span>
+                <span className="text-[10px] text-indigo-200 flex items-center gap-1"><div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div> Online</span>
+              </div>
+            </div>
+            <button onClick={() => setShowChatWindow(false)} className="text-white hover:bg-indigo-700 p-1.5 rounded transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Chat Body */}
+          <div className="flex-1 overflow-y-auto p-4 bg-slate-50 flex flex-col gap-4">
+            <div className="bg-white px-3 py-2 rounded shadow-sm border border-slate-100 flex items-center gap-2 self-center w-full">
+              <ShieldCheck className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+              <span className="text-[10px] text-slate-600 leading-tight">Keep chats and transactions on O3.com to enjoy order protection.</span>
+            </div>
+
+            {chatMessages.map(msg => (
+              <div key={msg.id} className={`flex flex-col max-w-[85%] ${msg.sender === 'user' ? 'self-end items-end' : 'self-start items-start'}`}>
+                <div className={`p-3 rounded-xl text-sm ${msg.sender === 'user' ? 'bg-indigo-600 text-white rounded-tr-sm' : 'bg-white text-slate-800 border border-slate-200 rounded-tl-sm'}`}>
+                  {msg.text}
+                </div>
+                <span className="text-[10px] text-slate-400 mt-1">{msg.time}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Input Area */}
+          <div className="bg-white border-t border-slate-200 flex-shrink-0">
+            {/* Product Context */}
+            <div className="p-2 border-b border-slate-100 bg-slate-50 flex items-center gap-2">
+              <div className="w-10 h-10 bg-white rounded border border-slate-200 flex-shrink-0 p-1">
+                <Package className="w-full h-full text-indigo-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-slate-800 line-clamp-1">{product.title}</p>
+                <p className="text-[10px] font-bold text-slate-900 mt-0.5">₹{currentPrice.toLocaleString("en-IN")}/piece</p>
+              </div>
+            </div>
+
+            {/* Toolbar */}
+            <div className="px-3 py-2 flex items-center gap-3 text-slate-500 border-b border-slate-100">
+              <button className="hover:text-slate-800"><Smile className="w-4 h-4" /></button>
+              <button className="hover:text-slate-800"><ImageIcon className="w-4 h-4" /></button>
+              <button className="hover:text-slate-800"><Folder className="w-4 h-4" /></button>
+              <button className="hover:text-slate-800"><FileText className="w-4 h-4" /></button>
+              <button className="hover:text-slate-800 flex items-center gap-0.5"><Languages className="w-4 h-4" /><span className="text-[10px] font-bold">A</span></button>
+            </div>
+
+            {/* Input Box */}
+            <div className="p-3 relative bg-white">
+              <textarea 
+                className="w-full resize-none border-0 focus:ring-0 p-0 text-sm bg-transparent min-h-[60px]"
+                placeholder="Please enter your message here..."
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (chatInput.trim()) {
+                      setChatMessages([...chatMessages, {
+                        id: Date.now(),
+                        sender: 'user',
+                        text: chatInput,
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                      }]);
+                      setChatInput("");
+                    }
+                  }
+                }}
+              ></textarea>
+              <div className="flex justify-end mt-2">
+                <button 
+                  onClick={() => {
+                    if (chatInput.trim()) {
+                      setChatMessages([...chatMessages, {
+                        id: Date.now(),
+                        sender: 'user',
+                        text: chatInput,
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                      }]);
+                      setChatInput("");
+                    }
+                  }}
+                  className={`px-5 py-1.5 rounded-full text-sm font-bold transition-colors ${chatInput.trim() ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+                >
+                  Send
+                </button>
+              </div>
             </div>
           </div>
         </div>

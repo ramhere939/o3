@@ -24,6 +24,8 @@ import {
   ChevronRight,
   Zap,
   FlaskConical,
+  ClipboardList,
+  Clock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useApp } from "@/context/AppContext";
@@ -36,9 +38,20 @@ const buyerNav = [
   { label: "RFQ Tracker", icon: GitPullRequest, to: "/buyer/rfq/tracker" },
   { label: "Compare Quotes", icon: Scale, to: "/buyer/quotes/compare" },
   { label: "Negotiate", icon: MessageSquare, to: "/buyer/quotes/negotiate" },
+];
+
+const buyerOnlineTrading = [
+  { label: "Messages", icon: MessageSquare, to: "/buyer/messages" },
   { label: "Purchase Orders", icon: ShoppingCart, to: "/buyer/orders" },
+  { label: "Payment", icon: DollarSign, to: "/buyer/dashboard?tab=payment" },
+  { label: "Saved & history", icon: Clock, to: "/buyer/dashboard?tab=saved" },
+];
+
+const buyerAddons = [
   { label: "Shipment Tracking", icon: Truck, to: "/buyer/shipments" },
   { label: "Documents Vault", icon: FolderOpen, to: "/buyer/documents" },
+  { label: "Subscription", icon: Zap, to: "/buyer/dashboard?tab=subscription" },
+  { label: "Logistics services", icon: Package, to: "/buyer/dashboard?tab=logistics" },
 ];
 
 const supplierNav = [
@@ -70,7 +83,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
   const isActive = (to: string) =>
     location.pathname === to ||
-    (to !== "/" && location.pathname.startsWith(to));
+    (to !== "/" && location.pathname.startsWith(to)) ||
+    (location.pathname + location.search) === to;
 
   return (
     <motion.aside
@@ -91,6 +105,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.15 }}
+                className="flex-shrink-0"
               >
                 <span className="text-lg font-bold text-slate-900">O3</span>
                 <span className="text-xs text-slate-400 ml-1.5">Procurement</span>
@@ -101,7 +116,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       </div>
 
       {/* Nav sections */}
-      <div className="flex-1 overflow-y-auto py-4 space-y-6 px-2">
+      <div className="flex-1 overflow-y-auto py-4 space-y-6 px-2 scrollbar-hide">
         {/* Role nav */}
         <NavSection
           label={user.role === "buyer" ? "Buyer Portal" : "Supplier Portal"}
@@ -109,6 +124,23 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           collapsed={collapsed}
           isActive={isActive}
         />
+
+        {user.role === "buyer" && (
+          <>
+            <NavSection
+              label="Online Trading"
+              items={buyerOnlineTrading}
+              collapsed={collapsed}
+              isActive={isActive}
+            />
+            <NavSection
+              label="Add-on Services"
+              items={buyerAddons}
+              collapsed={collapsed}
+              isActive={isActive}
+            />
+          </>
+        )}
 
         {/* Global nav */}
         <NavSection
@@ -122,7 +154,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       {/* Collapse toggle */}
       <button
         onClick={onToggle}
-        className="h-12 flex items-center justify-center border-t border-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors"
+        className="h-12 flex items-center justify-center border-t border-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors flex-shrink-0"
         aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
         {collapsed ? (

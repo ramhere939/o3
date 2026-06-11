@@ -32,6 +32,7 @@ export function Navbar({ onMobileMenuToggle }: NavbarProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
   const navigate = useNavigate();
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -50,6 +51,24 @@ export function Navbar({ onMobileMenuToggle }: NavbarProps) {
   };
 
   useEffect(() => {
+    const updateCartCount = () => {
+      const saved = localStorage.getItem("o3_buyer_cart");
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setCartCount(Array.isArray(parsed) ? parsed.length : 0);
+        } catch {
+          setCartCount(0);
+        }
+      } else {
+        setCartCount(0);
+      }
+    };
+    
+    updateCartCount();
+    window.addEventListener("storage", updateCartCount);
+    window.addEventListener("cartUpdated", updateCartCount);
+
     const handleClickOutside = (e: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
         setShowNotifications(false);
@@ -59,7 +78,11 @@ export function Navbar({ onMobileMenuToggle }: NavbarProps) {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("storage", updateCartCount);
+      window.removeEventListener("cartUpdated", updateCartCount);
+    };
   }, []);
 
   if (user.role === "buyer") {
@@ -77,15 +100,6 @@ export function Navbar({ onMobileMenuToggle }: NavbarProps) {
         </div>
 
         <div className="flex items-center gap-5 ml-auto text-xs font-medium text-slate-600">
-          <div className="hidden lg:flex flex-col items-end cursor-pointer">
-            <span className="text-[10px] text-slate-400">Deliver to:</span>
-            <div className="flex items-center gap-1">
-              <span className="text-base">🇮🇳</span> IN
-            </div>
-          </div>
-          
-          <Globe className="w-5 h-5 hover:text-indigo-600 cursor-pointer" />
-          
           <Link to="/buyer/messages" className="flex flex-col items-center gap-1 hover:text-indigo-600">
             <MessageSquare className="w-5 h-5" />
             <span className="text-[10px]">Messages</span>
@@ -99,7 +113,11 @@ export function Navbar({ onMobileMenuToggle }: NavbarProps) {
           <Link to="/buyer/cart" className="flex flex-col items-center gap-1 hover:text-indigo-600 cursor-pointer">
             <div className="relative">
               <ShoppingCart className="w-5 h-5" />
-              <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-indigo-600 text-white text-[8px] font-bold flex items-center justify-center rounded-full leading-none">2</span>
+              {cartCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-indigo-600 text-white text-[8px] font-bold flex items-center justify-center rounded-full leading-none">
+                  {cartCount}
+                </span>
+              )}
             </div>
             <span className="text-[10px]">Cart</span>
           </Link>

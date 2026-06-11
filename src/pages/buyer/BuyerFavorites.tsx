@@ -58,10 +58,20 @@ export default function BuyerFavorites() {
               </button>
               
               <div className="h-40 bg-slate-100 flex items-center justify-center relative overflow-hidden group-hover:bg-slate-200 transition-colors">
-                <div className="absolute top-2 left-2 bg-white/90 backdrop-blur px-2 py-1 rounded text-[10px] font-bold text-slate-600 flex items-center gap-1">
+                <div className="absolute top-2 left-2 bg-white/90 backdrop-blur px-2 py-1 rounded z-10 text-[10px] font-bold text-slate-600 flex items-center gap-1">
                   <Star className="w-3 h-3 text-amber-500 fill-amber-500" /> {product.rating}
                 </div>
-                <Package className="w-12 h-12 text-slate-300" />
+                <img 
+                  src={[
+                    "/chemicals/c1.jpg",
+                    "/chemicals/c2.jpg",
+                    "/chemicals/c3.jpg",
+                    "/chemicals/c4.avif",
+                    "/chemicals/c5.jpg"
+                  ][(String(product.id).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % 5]} 
+                  alt={product.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
               </div>
 
               <div className="p-4 flex flex-col flex-1">
