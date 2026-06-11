@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Plus, Edit2, Trash2, Search, Package, AlertCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -19,7 +20,7 @@ export default function InventoryManagement() {
     queryFn: () => getProducts(),
   });
 
-  const myProducts = products?.filter((p) => p.supplierId === "s1").slice(0, 12) || [];
+  const myProducts = products?.filter((p) => p.supplierId === "s1") || [];
   const filtered = myProducts.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
 
   const statusCounts = {
@@ -31,16 +32,16 @@ export default function InventoryManagement() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Inventory Management"
+        title="Products"
         subtitle="Manage your product listings and stock levels"
-        breadcrumb={["Supplier Portal", "Inventory"]}
+        breadcrumb={["Supplier Portal", "Products"]}
         action={
-          <button 
-            onClick={() => setIsAddModalOpen(true)}
+          <Link 
+            to="/supplier/inventory/post"
             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg"
           >
-            <Plus className="w-4 h-4" /> List New Product
-          </button>
+            <Plus className="w-4 h-4" /> Make New Post
+          </Link>
         }
       />
 
@@ -68,7 +69,6 @@ export default function InventoryManagement() {
         </div>
       </div>
 
-      {/* Product table */}
       <SectionCard noPadding>
         {isLoading ? (
           <div className="p-6 space-y-4">
@@ -142,24 +142,6 @@ export default function InventoryManagement() {
           </div>
         )}
       </SectionCard>
-
-      <AddProductListingModal 
-        isOpen={isAddModalOpen} 
-        onClose={() => setIsAddModalOpen(false)} 
-        onConfirm={async (data) => {
-          await createProduct({
-            ...data,
-            supplierId: "s1",
-            supplierName: "O3 Demo Supplier",
-            location: "Gujarat, India",
-            inStock: true,
-            rating: 0,
-            reviewCount: 0,
-            tags: data.category,
-          });
-          // Refetch to see the new product... in a real app queryClient.invalidateQueries
-        }} 
-      />
     </div>
   );
 }

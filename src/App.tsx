@@ -31,6 +31,7 @@ import RFQInbox from "./pages/supplier/RFQInbox";
 import QuoteGenerator from "./pages/supplier/QuoteGenerator";
 import SupplierQuoteNegotiate from "./pages/supplier/QuoteNegotiate";
 import InventoryManagement from "./pages/supplier/InventoryManagement";
+import SmartPosting from "./pages/supplier/SmartPosting";
 import SupplierFulfillment from "./pages/supplier/SupplierFulfillment";
 import SupplierEarnings from "./pages/supplier/SupplierEarnings";
 
@@ -77,6 +78,7 @@ function AppRoutes() {
         <Route path="/supplier/quotes" element={<QuoteGenerator />} />
         <Route path="/supplier/quotes/negotiate" element={<SupplierQuoteNegotiate />} />
         <Route path="/supplier/inventory" element={<InventoryManagement />} />
+        <Route path="/supplier/inventory/post" element={<SmartPosting />} />
         <Route path="/supplier/fulfillment" element={<SupplierFulfillment />} />
         <Route path="/supplier/earnings" element={<SupplierEarnings />} />
 

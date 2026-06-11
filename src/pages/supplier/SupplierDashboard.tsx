@@ -6,7 +6,7 @@ import {
   LineChart, Line
 } from "recharts";
 import {
-  Inbox, DollarSign, Star, TrendingUp, ArrowRight, Package, ShieldCheck, Award
+  Inbox, DollarSign, Star, TrendingUp, ArrowRight, Package, ShieldCheck, Award, HelpCircle, FileText
 } from "lucide-react";
 import { getSupplierDashboardStats, getRevenueByMonth, getQuotes, getRFQs } from "@/lib/mock-api";
 import { formatCurrency } from "@/lib/utils";
@@ -43,48 +43,105 @@ export default function SupplierDashboard() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Supplier Dashboard"
-        subtitle="Track performance and manage your quotes"
-        breadcrumb={["Supplier Portal", "Dashboard"]}
-        action={
-          <Link
-            to="/supplier/inventory"
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-          >
-            + List Product
-          </Link>
-        }
-      />
-
-      {/* O3 Assured badge */}
-      <div className="flex items-center gap-3 bg-gradient-to-r from-indigo-600 to-violet-700 rounded-xl p-4 text-white">
-        <ShieldCheck className="w-8 h-8 text-indigo-200 flex-shrink-0" />
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <Award className="w-4 h-4 text-amber-300" />
-            <p className="font-semibold">O3 Assured Supplier</p>
+      {/* Alibaba Welcome Banner */}
+      <div className="bg-gradient-to-r from-[#165DFF] to-[#4080FF] rounded-t-xl rounded-b shadow-sm overflow-hidden text-white">
+        {/* Top half: Welcome */}
+        <div className="flex items-center justify-center py-6 bg-[url('https://img.alicdn.com/tfs/TB1..')] bg-cover bg-no-repeat bg-center" style={{ backgroundImage: "url('https://img.alicdn.com/imgextra/i3/O1CN01D6U0n21wQ4L3D8mX0_!!6000000006301-2-tps-2880-480.png')", backgroundColor: "#f8f9fa" }}>
+          <div className="bg-white/90 backdrop-blur px-8 py-3 rounded-full text-slate-800 font-semibold shadow-sm inline-flex items-center gap-2">
+            Welcome back, SUPPLIER!
           </div>
-          <p className="text-xs text-indigo-200 mt-0.5">Your profile is verified. Buyers trust your listings 3x more.</p>
         </div>
-        <div className="text-right">
-          <p className="text-xs text-indigo-200">Win Rate</p>
-          <p className="text-2xl font-bold">68%</p>
+
+        {/* Bottom half: Ratings */}
+        <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 bg-[#0A3DBC]">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Current Star Rating</span>
+              <div className="flex text-white/40">
+                <Star className="w-4 h-4 fill-current" />
+                <Star className="w-4 h-4 fill-current" />
+                <Star className="w-4 h-4 fill-current" />
+                <Star className="w-4 h-4 fill-current" />
+                <Star className="w-4 h-4 fill-current" />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Forecasted Star Rating</span>
+              <span className="bg-[#10B981] text-white text-xs px-2 py-0.5 rounded font-medium">0-Star Supplier</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-sm mt-4 sm:mt-0 cursor-pointer hover:text-white/80 transition-colors">
+            <FileText className="w-4 h-4" />
+            Monthly performance report <span className="bg-white text-[#0A3DBC] w-4 h-4 flex items-center justify-center rounded text-[10px] font-bold">1</span>
+          </div>
         </div>
       </div>
 
-      {/* Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statsLoading ? (
-          Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)
-        ) : (
-          <>
-            <MetricCard title="Open RFQs" value={stats?.openRFQs ?? 0} subtitle="Awaiting your quotes" icon={<Inbox />} color="indigo" trend={{ value: 15, label: "this week" }} index={0} />
-            <MetricCard title="Active Quotes" value={stats?.activeQuotes ?? 0} subtitle="Pending decisions" icon={<Package />} color="violet" trend={{ value: 6 }} index={1} />
-            <MetricCard title="Total Orders" value={stats?.totalOrders ?? 0} subtitle="Fulfilled orders" icon={<Star />} color="emerald" trend={{ value: 8, label: "vs last month" }} index={2} />
-            <MetricCard title="Revenue (MTD)" value={formatCurrency(stats?.revenue ?? 0)} subtitle="Month to date" icon={<DollarSign />} color="amber" trend={{ value: 12, label: "vs last month" }} index={3} />
-          </>
-        )}
+      {/* Performance Card */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="flex items-center gap-4 mb-6">
+          <h2 className="text-xl font-bold text-slate-900">Performance</h2>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <span className="absolute -top-2 -right-2 bg-[#10B981] text-white text-[8px] font-bold px-1 rounded-sm">NEW</span>
+              <button className="flex items-center gap-1 text-sm bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-full font-medium">
+                <TrendingUp className="w-3 h-3" /> Funnel
+              </button>
+            </div>
+            <span className="text-sm text-slate-500">12/18 2022 to 12/24 2022</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+          <div className="flex flex-col">
+            <span className="text-sm text-slate-500 flex items-center gap-1">Unique visitors (UV) <HelpCircle className="w-3 h-3"/></span>
+            <span className="text-2xl font-bold text-slate-900 mt-2 mb-1">0</span>
+            <span className="text-xs text-rose-500 font-medium">100% - vs. your peers</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm text-slate-500 flex items-center gap-1">Inquiries <HelpCircle className="w-3 h-3"/></span>
+            <span className="text-2xl font-bold text-slate-900 mt-2 mb-1">0</span>
+            <span className="text-xs text-rose-500 font-medium">100% - vs. your peers</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm text-slate-500 flex items-center gap-1">Messages <HelpCircle className="w-3 h-3"/></span>
+            <span className="text-2xl font-bold text-slate-900 mt-2 mb-1">0</span>
+            <span className="text-xs text-rose-500 font-medium">100% - vs. your peers</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm text-slate-500 flex items-center gap-1">Store response time <HelpCircle className="w-3 h-3"/></span>
+            <span className="text-2xl font-bold text-slate-900 mt-2 mb-1">0.00hr</span>
+            <span className="text-xs text-emerald-500 font-medium">0% - vs. your peers</span>
+          </div>
+          <div className="flex flex-col border-l border-slate-100 pl-6">
+            <span className="text-sm text-slate-500">Unread inquires</span>
+            <span className="text-3xl font-bold text-slate-900 mt-1 mb-3">5</span>
+            <button className="text-sm text-indigo-600 border border-indigo-600 rounded-full py-1.5 px-4 font-medium hover:bg-indigo-50 transition-colors w-fit">
+              Reply now
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Our Suggestions Card */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-bold text-slate-900">Our suggestions</h2>
+            <span className="text-xs text-slate-500">Updated on every Monday</span>
+          </div>
+          <span className="text-sm text-slate-500 flex items-center gap-1 cursor-pointer">
+            My industry: <Package className="w-3 h-3" />
+          </span>
+        </div>
+        <ul className="space-y-4 list-disc pl-5 text-sm text-slate-700">
+          <li>
+            Compared to your peers, your UV is <span className="text-rose-500">200.0%-</span>, the number of inquiries is <span className="text-rose-500">200.0%-</span>, the number of messages is <span className="text-rose-500">200.0%-</span>
+          </li>
+          <li>
+            To outperform your peers, adjust marketing strategies to increase UV and impressions, and improve your products to become Top and Super Products and get more inquiries or messages. <span className="text-indigo-600 cursor-pointer">Act Now</span>
+          </li>
+        </ul>
       </div>
 
       {/* Revenue chart */}

@@ -54,6 +54,7 @@ function QuoteCard({
   onAccept: (id: string) => void;
   onReject: (id: string) => void;
   onNegotiate: (id: string) => void;
+  onChat: (id: string) => void;
 }) {
   const belowTarget =
     rfq.targetPrice && quote.price <= rfq.targetPrice;
@@ -164,18 +165,26 @@ function QuoteCard({
           <button
             onClick={() => onAccept(quote.id)}
             className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium py-2 rounded-lg transition-colors"
+            title="Accept Quote"
           >
-            <CheckCircle className="w-3.5 h-3.5" /> Accept
+            <CheckCircle className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => onChat(quote.id)}
+            className="flex-1 flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium py-2 rounded-lg transition-colors"
+          >
+            <MessageSquare className="w-3.5 h-3.5" /> Chat
           </button>
           <button
             onClick={() => onNegotiate(quote.id)}
             className="flex-1 flex items-center justify-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-medium py-2 rounded-lg transition-colors"
           >
-            <MessageSquare className="w-3.5 h-3.5" /> Negotiate
+            Negotiate
           </button>
           <button
             onClick={() => onReject(quote.id)}
             className="flex items-center justify-center gap-1.5 border border-slate-200 hover:bg-red-50 hover:border-red-200 hover:text-red-600 text-slate-500 text-xs font-medium py-2 px-3 rounded-lg transition-colors"
+            title="Reject Quote"
           >
             <XCircle className="w-3.5 h-3.5" />
           </button>
@@ -245,6 +254,9 @@ export function RFQDetailModal({
   const handleNegotiate = (quoteId: string) => {
     onClose();
     navigate(`/buyer/quotes/negotiate?quoteId=${quoteId}&rfqId=${rfqId}`);
+  };
+  const handleChat = (quoteId: string) => {
+    window.dispatchEvent(new CustomEvent('openChat', { detail: quoteId }));
   };
 
   const isLoading = rfqLoading || quotesLoading;
@@ -445,6 +457,7 @@ export function RFQDetailModal({
                             onAccept={handleAccept}
                             onReject={handleReject}
                             onNegotiate={handleNegotiate}
+                            onChat={handleChat}
                           />
                         ))}
                       </div>

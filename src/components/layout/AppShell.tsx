@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Sidebar } from "./Sidebar";
 import { Navbar } from "./Navbar";
 import { AIAssistant } from "../shared/AIAssistant";
+import { GlobalChatWidget } from "../shared/GlobalChatWidget";
 
 export function AppShell() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -40,6 +41,7 @@ export function AppShell() {
           </AnimatePresence>
         </main>
         <AIAssistant />
+        <GlobalChatWidget />
       </div>
     </div>
   );

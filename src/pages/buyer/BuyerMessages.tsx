@@ -1,48 +1,98 @@
-import { useState } from "react";
-import { Search, Filter, MessageSquare, Plus, CheckSquare, Settings, HeadphonesIcon, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Search, Filter, MessageSquare, Plus, CheckSquare, Settings, X, Send, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { io, Socket } from "socket.io-client";
+import { getQuotes } from "@/lib/mock-api";
+import { useApp } from "@/context/AppContext";
+
+interface Message {
+  id: string;
+  sender: "buyer" | "supplier";
+  text: string;
+  timestamp: string;
+  quoteId: string;
+}
 
 export default function BuyerMessages() {
-  const [selectedChat, setSelectedChat] = useState<number | null>(null);
+  const { user } = useApp();
+  const [selectedChat, setSelectedChat] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [input, setInput] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const [chats, setChats] = useState([
-    {
-      id: 1,
-      name: "Laura C",
-      company: "Guangzhou Lianxian Elect...",
-      country: "China",
-      time: "15:07",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Laura",
-      productImg: "https://via.placeholder.com/40",
-      unread: true
-    },
-    {
-      id: 2,
-      name: "Aditya Chemicals",
-      company: "Aditya Chemicals Ltd.",
-      country: "India",
-      time: "11:20",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Aditya",
-      productImg: "https://via.placeholder.com/40",
-      unread: false
+  const { data: quotes, isLoading: quotesLoading } = useQuery({
+    queryKey: ["quotes", user.role, user.id],
+    queryFn: () => getQuotes({}), // mock buyer id inside if needed
+    enabled: !!user.role,
+  });
+
+  useEffect(() => {
+    if (!quotes || quotes.length === 0) return;
+
+    const newSocket = io("http://localhost:3001");
+    setSocket(newSocket);
+
+    newSocket.on("connect", () => {
+      quotes.forEach(quote => {
+        newSocket.emit("join_quote_room", quote.id);
+      });
+    });
+
+    newSocket.on("receive_message", (msg: Message) => {
+      setMessages(prev => {
+        if (prev.find(m => m.id === msg.id)) return prev;
+        return [...prev, msg];
+      });
+    });
+
+    return () => {
+      newSocket.disconnect();
+    };
+  }, [quotes]);
+
+  useEffect(() => {
+    if (!selectedChat) return;
+    
+    fetch(`/api/quotes/${selectedChat}/messages`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setMessages(prev => {
+            const newMessages = [...prev];
+            data.forEach((d: Message) => {
+              if (!newMessages.find(m => m.id === d.id)) {
+                newMessages.push(d);
+              }
+            });
+            return newMessages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+          });
+        }
+      })
+      .catch(console.error);
+  }, [selectedChat]);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  ]);
+  }, [messages, selectedChat]);
 
-  // Read mock messages from localStorage
-  const existingStr = localStorage.getItem("o3_mock_messages");
-  const mockMessages = existingStr ? JSON.parse(existingStr) : [];
-  
-  const mockChat = mockMessages.length > 0 ? {
-    id: 999,
-    name: "Supplier",
-    company: mockMessages[0].supplier,
-    country: "China",
-    time: mockMessages[mockMessages.length - 1].time,
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Supplier",
-    productImg: "https://via.placeholder.com/40",
-    unread: false
-  } : null;
+  const handleSend = () => {
+    if (!input.trim() || !socket || !selectedChat) return;
 
-  const displayChats = mockChat ? [mockChat, ...chats] : chats;
+    const data = {
+      quoteId: selectedChat,
+      sender: "buyer",
+      text: input.trim(),
+    };
+    
+    socket.emit("send_message", data);
+    setInput("");
+  };
+
+  const activeMessages = messages.filter(m => m.quoteId === selectedChat);
+  const activeQuote = quotes?.find(q => q.id === selectedChat);
 
   return (
     <div className="flex h-[calc(100vh-4rem)] bg-slate-50 -m-6 overflow-hidden">
@@ -104,35 +154,46 @@ export default function BuyerMessages() {
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {displayChats.map(chat => (
-            <button
-              key={chat.id}
-              onClick={() => setSelectedChat(chat.id)}
-              className={`w-full flex items-start gap-3 p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors text-left ${selectedChat === chat.id ? 'bg-indigo-50/50' : ''}`}
-            >
-              <div className="relative">
-                <img src={chat.avatar} alt={chat.name} className="w-10 h-10 rounded-full bg-slate-100" />
-                {chat.unread && <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-baseline mb-0.5">
-                  <span className="font-bold text-slate-900 text-sm truncate pr-2">{chat.name}</span>
-                  <span className="text-[10px] text-slate-400">{chat.time}</span>
-                </div>
-                <p className="text-xs text-slate-500 truncate">{chat.company}</p>
-                <p className="text-xs text-slate-400">{chat.country}</p>
-              </div>
-              <div className="w-10 h-10 rounded bg-slate-100 flex-shrink-0 border border-slate-200 overflow-hidden">
-                <div className="w-full h-full bg-slate-200 flex items-center justify-center text-[8px] text-slate-400">IMG</div>
-              </div>
-            </button>
-          ))}
+          {quotesLoading ? (
+            <div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>
+          ) : quotes?.length === 0 ? (
+            <div className="p-8 text-center text-slate-500 text-sm">No active chats</div>
+          ) : (
+            quotes?.map(quote => {
+              const quoteMsgs = messages.filter(m => m.quoteId === quote.id);
+              const lastMsg = quoteMsgs[quoteMsgs.length - 1];
+
+              return (
+                <button
+                  key={quote.id}
+                  onClick={() => setSelectedChat(quote.id)}
+                  className={`w-full flex items-start gap-3 p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors text-left ${selectedChat === quote.id ? 'bg-indigo-50/50' : ''}`}
+                >
+                  <div className="relative">
+                    <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
+                      {quote.supplierName?.charAt(0) || "S"}
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-baseline mb-0.5">
+                      <span className="font-bold text-slate-900 text-sm truncate pr-2">{quote.supplierName}</span>
+                      <span className="text-[10px] text-slate-400">
+                        {lastMsg ? new Date(lastMsg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 truncate">{lastMsg ? lastMsg.text : `Quote ${quote.quoteNumber}`}</p>
+                    <p className="text-[10px] text-slate-400 mt-1">RFQ: {quote.rfqId}</p>
+                  </div>
+                </button>
+              );
+            })
+          )}
         </div>
       </div>
 
       {/* Pane 3: Main Chat Area */}
       <div className="flex-1 bg-white relative flex flex-col">
-        {!selectedChat ? (
+        {!selectedChat || !activeQuote ? (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center relative">
             <div className="max-w-md">
               <h2 className="text-xl font-serif font-bold text-slate-900 mb-6 leading-relaxed">
@@ -161,7 +222,7 @@ export default function BuyerMessages() {
             <div className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-3">
                 <span className="font-bold text-slate-900">
-                  {displayChats.find(c => c.id === selectedChat)?.name}
+                  {activeQuote.supplierName}
                 </span>
                 <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold rounded">Gold Supplier</span>
               </div>
@@ -171,25 +232,29 @@ export default function BuyerMessages() {
             </div>
             
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
-              {selectedChat === 999 ? (
-                <>
-                  <div className="bg-white rounded-lg p-4 border border-slate-200 max-w-sm self-start">
-                    <p className="text-sm text-slate-700">Hello, I'm the supplier. How can I help you today?</p>
-                    <span className="text-[10px] text-slate-400 mt-2 block">Earlier</span>
-                  </div>
-                  {mockMessages.map((msg: any) => (
-                    <div key={msg.id} className="bg-indigo-100 rounded-lg p-4 border border-indigo-200 max-w-md self-end">
-                      <p className="text-sm text-slate-800 whitespace-pre-wrap">{msg.text}</p>
-                      <span className="text-[10px] text-indigo-500 mt-2 block text-right">{msg.time}</span>
-                    </div>
-                  ))}
-                </>
-              ) : (
-                <div className="bg-white rounded-lg p-4 border border-slate-200 max-w-sm self-start">
-                  <p className="text-sm text-slate-700">Hello, I saw your RFQ for Titanium Dioxide. Are you still looking for a supplier?</p>
-                  <span className="text-[10px] text-slate-400 mt-2 block">11:20 AM</span>
+            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4" ref={scrollRef}>
+              {activeMessages.length === 0 ? (
+                <div className="text-center text-slate-500 text-sm mt-10">
+                  No messages yet. Send a message to start the conversation!
                 </div>
+              ) : (
+                activeMessages.map((msg, i) => {
+                  const isMe = msg.sender === "buyer";
+                  return (
+                    <div key={i} className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                      <div 
+                        className={`max-w-md px-4 py-3 rounded-2xl text-sm shadow-sm ${
+                          isMe ? "bg-indigo-600 text-white rounded-br-none" : "bg-white border border-slate-200 text-slate-800 rounded-bl-none"
+                        }`}
+                      >
+                        <p className="whitespace-pre-wrap">{msg.text}</p>
+                      </div>
+                      <span className="text-[10px] text-slate-400 mt-1 mx-1">
+                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  );
+                })
               )}
             </div>
             
@@ -199,12 +264,24 @@ export default function BuyerMessages() {
                 <button className="p-1 hover:text-indigo-600"><Plus className="w-5 h-5" /></button>
               </div>
               <textarea 
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
                 className="w-full resize-none border-0 focus:ring-0 p-0 text-sm bg-transparent"
                 rows={3}
                 placeholder="Type a message..."
-              ></textarea>
+              />
               <div className="flex justify-end mt-2">
-                <button className="px-6 py-1.5 bg-indigo-600 text-white rounded-full text-sm font-bold hover:bg-indigo-700 transition-colors">
+                <button 
+                  onClick={handleSend}
+                  disabled={!input.trim()}
+                  className="px-6 py-1.5 bg-indigo-600 text-white rounded-full text-sm font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                >
                   Send
                 </button>
               </div>

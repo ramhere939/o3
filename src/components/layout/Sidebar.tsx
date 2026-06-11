@@ -25,7 +25,13 @@ import {
   Zap,
   FlaskConical,
   ClipboardList,
-  Clock
+  Clock,
+  Store,
+  Users,
+  Megaphone,
+  HelpCircle,
+  Code,
+  Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useApp } from "@/context/AppContext";
@@ -55,19 +61,17 @@ const buyerAddons = [
 ];
 
 const supplierNav = [
-  { label: "Dashboard", icon: LayoutDashboard, to: "/supplier/dashboard" },
-  { label: "Inventory", icon: Boxes, to: "/supplier/inventory" },
-  { label: "RFQ Inbox", icon: Inbox, to: "/supplier/rfq-inbox" },
-  { label: "Quote Generator", icon: Quote, to: "/supplier/quotes" },
-  { label: "Fulfillment", icon: Truck, to: "/supplier/fulfillment" },
-  { label: "Earnings", icon: DollarSign, to: "/supplier/earnings" },
+  { label: "Home", icon: LayoutDashboard, to: "/supplier/dashboard" },
+  { label: "Products", icon: Package, to: "/supplier/inventory" },
+  { label: "RFQ Inbox", icon: MessageSquare, to: "/supplier/rfq-inbox" },
+  { label: "Analytics", icon: BarChart2, to: "/supplier/earnings" },
+  { label: "Orders", icon: ClipboardList, to: "/supplier/fulfillment" },
 ];
 
 const globalNav = [
   { label: "AI Tools", icon: Sparkles, to: "/buyer/search" },
   { label: "Price Intelligence", icon: BarChart2, to: "/price-intelligence" },
   { label: "SDS Assistant", icon: FlaskConical, to: "/sds-assistant" },
-  { label: "Content Hub", icon: BookOpen, to: "/content-hub" },
   { label: "Notifications", icon: Bell, to: "/notifications" },
 ];
 
@@ -79,7 +83,8 @@ interface SidebarProps {
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { user } = useApp();
   const location = useLocation();
-  const primaryNav = user.role === "buyer" ? buyerNav : supplierNav;
+  const isSupplier = user.role === "supplier";
+  const primaryNav = isSupplier ? supplierNav : buyerNav;
 
   const isActive = (to: string) =>
     location.pathname === to ||
@@ -90,10 +95,13 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     <motion.aside
       animate={{ width: collapsed ? 72 : 240 }}
       transition={{ duration: 0.2, ease: "easeInOut" }}
-      className="h-screen bg-white border-r border-slate-200 flex flex-col flex-shrink-0 overflow-hidden z-30"
+      className={cn(
+        "h-screen border-r flex flex-col flex-shrink-0 overflow-hidden z-30",
+        isSupplier ? "bg-[#1A1E2F] border-[#1A1E2F]" : "bg-white border-slate-200"
+      )}
     >
       {/* Logo */}
-      <div className="h-16 flex items-center px-4 border-b border-slate-100 flex-shrink-0">
+      <div className={cn("h-16 flex items-center px-4 border-b flex-shrink-0", isSupplier ? "border-slate-700" : "border-slate-100")}>
         <div className="flex items-center gap-2.5 overflow-hidden">
           <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center flex-shrink-0">
             <Zap className="w-4 h-4 text-white" />
@@ -107,8 +115,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 transition={{ duration: 0.15 }}
                 className="flex-shrink-0"
               >
-                <span className="text-lg font-bold text-slate-900">O3</span>
-                <span className="text-xs text-slate-400 ml-1.5">Procurement</span>
+                <span className={cn("text-lg font-bold", isSupplier ? "text-white" : "text-slate-900")}>O3</span>
+                <span className={cn("text-xs ml-1.5", isSupplier ? "text-slate-300" : "text-slate-400")}>Procurement</span>
               </motion.div>
             )}
           </AnimatePresence>
@@ -119,10 +127,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <div className="flex-1 overflow-y-auto py-4 space-y-6 px-2 scrollbar-hide">
         {/* Role nav */}
         <NavSection
-          label={user.role === "buyer" ? "Buyer Portal" : "Supplier Portal"}
+          label={isSupplier ? "Supplier Portal" : "Buyer Portal"}
           items={primaryNav}
           collapsed={collapsed}
           isActive={isActive}
+          isSupplier={isSupplier}
         />
 
         {user.role === "buyer" && (
@@ -132,12 +141,14 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               items={buyerOnlineTrading}
               collapsed={collapsed}
               isActive={isActive}
+              isSupplier={isSupplier}
             />
             <NavSection
               label="Add-on Services"
               items={buyerAddons}
               collapsed={collapsed}
               isActive={isActive}
+              isSupplier={isSupplier}
             />
           </>
         )}
@@ -148,13 +159,19 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           items={globalNav}
           collapsed={collapsed}
           isActive={isActive}
+          isSupplier={isSupplier}
         />
       </div>
 
       {/* Collapse toggle */}
       <button
         onClick={onToggle}
-        className="h-12 flex items-center justify-center border-t border-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors flex-shrink-0"
+        className={cn(
+          "h-12 flex items-center justify-center border-t transition-colors",
+          isSupplier
+            ? "border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800"
+            : "border-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-50"
+        )}
         aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
         {collapsed ? (
@@ -172,9 +189,10 @@ interface NavSectionProps {
   items: { label: string; icon: React.ElementType; to: string }[];
   collapsed: boolean;
   isActive: (to: string) => boolean;
+  isSupplier: boolean;
 }
 
-function NavSection({ label, items, collapsed, isActive }: NavSectionProps) {
+function NavSection({ label, items, collapsed, isActive, isSupplier }: NavSectionProps) {
   return (
     <div>
       <AnimatePresence>
@@ -183,7 +201,7 @@ function NavSection({ label, items, collapsed, isActive }: NavSectionProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 px-3 mb-2"
+            className={cn("text-[10px] font-semibold uppercase tracking-widest px-3 mb-2", isSupplier ? "text-slate-500" : "text-slate-400")}
           >
             {label}
           </motion.p>
@@ -193,21 +211,32 @@ function NavSection({ label, items, collapsed, isActive }: NavSectionProps) {
         {items.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.to);
+
+          let navItemClasses = active ? "nav-item-active" : "nav-item-inactive";
+          if (isSupplier) {
+            navItemClasses = active ? "bg-slate-800 text-white" : "text-slate-400 hover:bg-slate-800 hover:text-white";
+          }
+
           return (
             <li key={item.to}>
               <Link
                 to={item.to}
                 title={collapsed ? item.label : undefined}
                 className={cn(
-                  "nav-item w-full",
-                  active ? "nav-item-active" : "nav-item-inactive",
+                  "nav-item w-full relative",
+                  navItemClasses,
                   collapsed && "justify-center px-0"
                 )}
               >
+                {/* Active Indicator for Supplier */}
+                {isSupplier && active && !collapsed && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-green-500 rounded-r" />
+                )}
+
                 <Icon
                   className={cn(
-                    "flex-shrink-0",
-                    active ? "w-4 h-4 text-indigo-600" : "w-4 h-4"
+                    "flex-shrink-0 z-10",
+                    isSupplier ? (active ? "w-4 h-4 text-green-500" : "w-4 h-4") : (active ? "w-4 h-4 text-indigo-600" : "w-4 h-4")
                   )}
                 />
                 <AnimatePresence>
@@ -217,7 +246,7 @@ function NavSection({ label, items, collapsed, isActive }: NavSectionProps) {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -8 }}
                       transition={{ duration: 0.15 }}
-                      className="truncate"
+                      className="truncate z-10"
                     >
                       {item.label}
                     </motion.span>
