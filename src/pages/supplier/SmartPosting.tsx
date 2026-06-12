@@ -380,9 +380,55 @@ function PricingTab({ formData, updateForm }: { formData: any, updateForm: any }
   );
 }
 
+const CATEGORY_DATA: Record<string, Record<string, string[]>> = {
+  'Industrial Chemicals': {
+    'Inorganic Chemicals': ['Titanium Dioxide', 'Sulfuric Acid', 'Sodium Hydroxide', 'Ammonia'],
+    'Organic Chemicals': ['Methanol', 'Acetic Acid', 'Ethylene', 'Propylene'],
+    'Solvents': ['Acetone', 'Toluene', 'Xylene', 'Ethanol'],
+    'Pigments & Dyes': ['Iron Oxide', 'Zinc Oxide', 'Carbon Black', 'Phthalocyanine Blue']
+  },
+  'Agrochemicals': {
+    'Fertilizers': ['Urea', 'DAP', 'MOP', 'SSP'],
+    'Pesticides': ['Insecticides', 'Fungicides', 'Herbicides', 'Rodenticides'],
+    'Soil Conditioners': ['Gypsum', 'Lime', 'Peat', 'Perlite']
+  },
+  'Polymers & Resins': {
+    'Thermoplastics': ['Polyethylene (PE)', 'Polypropylene (PP)', 'PVC', 'Polystyrene'],
+    'Thermosets': ['Epoxy Resin', 'Phenolic Resin', 'Polyurethane', 'Silicone'],
+    'Elastomers': ['Natural Rubber', 'Synthetic Rubber', 'Neoprene', 'Nitrile']
+  },
+  'Fine Chemicals': {
+    'Pharmaceutical Intermediates': ['APIs', 'Excipients', 'Chiral Compounds'],
+    'Specialty Chemicals': ['Catalysts', 'Adhesives', 'Sealants', 'Coatings'],
+    'Aroma Chemicals': ['Essential Oils', 'Fragrance Compounds', 'Flavoring Agents']
+  },
+  'Petrochemicals': {
+    'Olefins': ['Ethylene', 'Propylene', 'Butadiene'],
+    'Aromatics': ['Benzene', 'Toluene', 'Xylene'],
+    'Synthesis Gas': ['Carbon Monoxide', 'Hydrogen', 'Methanol']
+  }
+};
+
 function CategoryModal({ onClose, onSelect }: { onClose: () => void, onSelect: (cat: string, sub: string) => void }) {
   const [selectedCat, setSelectedCat] = useState("Industrial Chemicals");
+  const [selectedSubGroup, setSelectedSubGroup] = useState("Inorganic Chemicals");
   const [selectedSub, setSelectedSub] = useState("Titanium Dioxide");
+
+  const catKeys = Object.keys(CATEGORY_DATA);
+  const subGroups = CATEGORY_DATA[selectedCat] ? Object.keys(CATEGORY_DATA[selectedCat]) : [];
+  const items = (CATEGORY_DATA[selectedCat] && CATEGORY_DATA[selectedCat][selectedSubGroup]) ? CATEGORY_DATA[selectedCat][selectedSubGroup] : [];
+
+  const handleCatChange = (c: string) => {
+    setSelectedCat(c);
+    const firstSubGroup = Object.keys(CATEGORY_DATA[c])[0];
+    setSelectedSubGroup(firstSubGroup);
+    setSelectedSub(CATEGORY_DATA[c][firstSubGroup][0]);
+  };
+
+  const handleSubGroupChange = (sg: string) => {
+    setSelectedSubGroup(sg);
+    setSelectedSub(CATEGORY_DATA[selectedCat][sg][0]);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
@@ -395,10 +441,10 @@ function CategoryModal({ onClose, onSelect }: { onClose: () => void, onSelect: (
         <div className="flex-1 overflow-auto p-4 bg-slate-50">
           <div className="flex flex-col md:flex-row h-full gap-2">
             <div className="md:w-1/3 bg-white border border-slate-200 rounded overflow-y-auto min-h-[200px]">
-              {['Industrial Chemicals', 'Agrochemicals', 'Polymers & Resins', 'Fine Chemicals', 'Petrochemicals'].map((c) => (
+              {catKeys.map((c) => (
                 <div 
                   key={c} 
-                  onClick={() => setSelectedCat(c)}
+                  onClick={() => handleCatChange(c)}
                   className={`px-4 py-2 text-sm cursor-pointer hover:bg-slate-50 ${selectedCat === c ? 'bg-slate-200 font-medium border-l-4 border-[#165DFF]' : ''}`}
                 >
                   {c}
@@ -406,18 +452,24 @@ function CategoryModal({ onClose, onSelect }: { onClose: () => void, onSelect: (
               ))}
             </div>
             <div className="md:w-1/3 bg-white border border-slate-200 rounded overflow-y-auto min-h-[200px]">
-              {selectedCat === 'Industrial Chemicals' && ['Inorganic Chemicals', 'Organic Chemicals', 'Solvents', 'Pigments & Dyes'].map((c) => (
-                <div key={c} className={`px-4 py-2 text-sm cursor-pointer hover:bg-slate-50`}>{c}</div>
+              {subGroups.map((sg) => (
+                <div 
+                  key={sg} 
+                  onClick={() => handleSubGroupChange(sg)}
+                  className={`px-4 py-2 text-sm cursor-pointer hover:bg-slate-50 ${selectedSubGroup === sg ? 'bg-slate-100 font-medium' : ''}`}
+                >
+                  {sg}
+                </div>
               ))}
             </div>
             <div className="md:w-1/3 bg-white border border-slate-200 rounded overflow-y-auto min-h-[200px]">
-              {selectedCat === 'Industrial Chemicals' && ['Titanium Dioxide', 'Sulfuric Acid', 'Sodium Hydroxide', 'Methanol', 'Acetic Acid'].map((c) => (
+              {items.map((item) => (
                 <div 
-                  key={c} 
-                  onClick={() => setSelectedSub(c)}
-                  className={`px-4 py-2 text-sm cursor-pointer hover:bg-slate-50 ${selectedSub === c ? 'bg-slate-200 font-medium' : ''}`}
+                  key={item} 
+                  onClick={() => setSelectedSub(item)}
+                  className={`px-4 py-2 text-sm cursor-pointer hover:bg-slate-50 ${selectedSub === item ? 'bg-slate-200 font-medium' : ''}`}
                 >
-                  {c}
+                  {item}
                 </div>
               ))}
             </div>

@@ -4,7 +4,8 @@ import { Star, MessageSquare, Heart, Share2, Shield, ShieldCheck, ChevronRight, 
 import { PageHeader } from "@/components/shared/UIHelpers";
 import { useApp } from "@/context/AppContext";
 import { io } from "socket.io-client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { getProductById } from "@/lib/mock-api";
 
 const MOCK_REVIEWS = [
   {
@@ -55,6 +56,18 @@ export default function ProductDetails() {
 
   const stateProduct = location.state?.product;
 
+  const { data: fetchedProduct, isLoading } = useQuery({
+    queryKey: ["product", id],
+    queryFn: () => getProductById(id as string),
+    enabled: !!id && !stateProduct,
+  });
+
+  const activeProduct = stateProduct || fetchedProduct;
+
+  if (!activeProduct && isLoading) {
+    return <div className="p-20 text-center text-slate-500 font-medium">Loading product details...</div>;
+  }
+
   const mockImages = [
     "/chemicals/c1.jpg",
     "/chemicals/c2.jpg",
@@ -62,7 +75,7 @@ export default function ProductDetails() {
     "/chemicals/c4.avif",
     "/chemicals/c5.jpg"
   ];
-  const prodId = stateProduct?.id || id || "1";
+  const prodId = activeProduct?.id || id || "1";
   const primaryImgIdx = (String(prodId).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % 5;
   const productImages = [
     mockImages[primaryImgIdx],
@@ -70,22 +83,26 @@ export default function ProductDetails() {
     mockImages[(primaryImgIdx + 2) % 5]
   ];
 
-  // Mock product data (we could fetch this based on the ID)
+  // Map activeProduct data to the UI format
   const product = {
     id: prodId,
-    title: stateProduct?.name || "Industrial Grade Titanium Dioxide (TiO2) High Purity Rutile Grade 93% Min",
-    rating: stateProduct?.rating || 5.0,
-    reviews: 5,
+    title: activeProduct?.name || "Industrial Grade Titanium Dioxide (TiO2) High Purity Rutile Grade 93% Min",
+    rating: activeProduct?.rating || 5.0,
+    reviews: activeProduct?.reviewCount || 5,
     sold: 533,
-    supplierName: stateProduct?.supplierName || "Guangzhou Lianxian Electronics Co., Ltd.",
+    supplierName: activeProduct?.supplierName || "Guangzhou Lianxian Electronics Co., Ltd.",
     supplierYears: 12,
-    location: "Guangzhou, CN",
+    location: activeProduct?.location || "Guangzhou, CN",
     priceTiers: [
-      { min: 1, max: 499, price: stateProduct?.price || 182.56 },
-      { min: 500, max: 1199, price: stateProduct ? stateProduct.price * 0.95 : 175.10 },
-      { min: 1200, max: null, price: stateProduct ? stateProduct.price * 0.9 : 168.48 },
+      { min: 1, max: 499, price: activeProduct?.price || 182.56 },
+      { min: 500, max: 1199, price: activeProduct ? activeProduct.price * 0.95 : 175.10 },
+      { min: 1200, max: null, price: activeProduct ? activeProduct.price * 0.9 : 168.48 },
     ],
-    images: productImages
+    images: productImages,
+    category: activeProduct?.category || "Pigments",
+    casNumber: activeProduct?.casNumber || "13463-67-7",
+    grade: activeProduct?.grade || "Industrial Grade",
+    tags: activeProduct?.tags || [],
   };
 
   const currentPrice = quantity >= 1200 ? product.priceTiers[2].price 
@@ -265,15 +282,15 @@ export default function ProductDetails() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
               <div className="grid grid-cols-3 border-b border-slate-200 pb-3">
                 <span className="text-slate-500 text-sm">CAS No.</span>
-                <span className="col-span-2 text-slate-900 text-sm font-medium">13463-67-7</span>
+                <span className="col-span-2 text-slate-900 text-sm font-medium">{product.casNumber}</span>
               </div>
               <div className="grid grid-cols-3 border-b border-slate-200 pb-3">
                 <span className="text-slate-500 text-sm">Other Names</span>
-                <span className="col-span-2 text-slate-900 text-sm font-medium">TiO2</span>
+                <span className="col-span-2 text-slate-900 text-sm font-medium">{Array.isArray(product.tags) ? (product.tags.length > 0 ? product.tags.join(', ') : 'N/A') : (product.tags || 'N/A')}</span>
               </div>
               <div className="grid grid-cols-3 border-b border-slate-200 pb-3">
-                <span className="text-slate-500 text-sm">MF</span>
-                <span className="col-span-2 text-slate-900 text-sm font-medium">TiO2</span>
+                <span className="text-slate-500 text-sm">Category</span>
+                <span className="col-span-2 text-slate-900 text-sm font-medium">{product.category}</span>
               </div>
               <div className="grid grid-cols-3 border-b border-slate-200 pb-3">
                 <span className="text-slate-500 text-sm">EINECS No.</span>
@@ -281,11 +298,11 @@ export default function ProductDetails() {
               </div>
               <div className="grid grid-cols-3 border-b border-slate-200 pb-3">
                 <span className="text-slate-500 text-sm">Place of Origin</span>
-                <span className="col-span-2 text-slate-900 text-sm font-medium">Guangdong, China</span>
+                <span className="col-span-2 text-slate-900 text-sm font-medium">{product.location}</span>
               </div>
               <div className="grid grid-cols-3 border-b border-slate-200 pb-3">
                 <span className="text-slate-500 text-sm">Grade Standard</span>
-                <span className="col-span-2 text-slate-900 text-sm font-medium">Industrial Grade</span>
+                <span className="col-span-2 text-slate-900 text-sm font-medium">{product.grade}</span>
               </div>
               <div className="grid grid-cols-3 border-b border-slate-200 pb-3">
                 <span className="text-slate-500 text-sm">Purity</span>
@@ -293,7 +310,7 @@ export default function ProductDetails() {
               </div>
               <div className="grid grid-cols-3 border-b border-slate-200 pb-3">
                 <span className="text-slate-500 text-sm">Appearance</span>
-                <span className="col-span-2 text-slate-900 text-sm font-medium">White Powder</span>
+                <span className="col-span-2 text-slate-900 text-sm font-medium">Standard</span>
               </div>
             </div>
           </div>

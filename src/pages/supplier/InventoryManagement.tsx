@@ -1,32 +1,49 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Plus, Edit2, Trash2, Search, Package, AlertCircle } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getProducts, createProduct } from "@/lib/mock-api";
 import { PageHeader, SectionCard } from "@/components/shared/UIHelpers";
 import { AddProductListingModal } from "@/components/AddProductListingModal";
-
-const STOCK_LEVELS: Record<string, "in_stock" | "low_stock" | "out_of_stock"> = {
-  p1: "in_stock", p2: "low_stock", p3: "in_stock", p4: "out_of_stock", p5: "in_stock",
-  p6: "in_stock", p7: "low_stock", p8: "in_stock", p9: "in_stock", p10: "low_stock",
-};
+import type { Product } from "@/types";
 
 export default function InventoryManagement() {
   const [search, setSearch] = useState("");
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: products, isLoading } = useQuery({
     queryKey: ["products"],
     queryFn: () => getProducts(),
   });
 
   const myProducts = products?.filter((p) => p.supplierId === "s1") || [];
-  const filtered = myProducts.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
+  const filtered = myProducts
+    .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const statusCounts = {
     in_stock: myProducts.filter((_, i) => ["in_stock"].includes(["in_stock", "low_stock", "in_stock", "out_of_stock"][i % 4])).length,
     low_stock: myProducts.filter((_, i) => i % 4 === 1).length,
     out_of_stock: myProducts.filter((_, i) => i % 4 === 3).length,
+  };
+
+  const handleDelete = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm("Are you sure you want to delete this listing?")) {
+      queryClient.setQueryData(["products"], (old: Product[] | undefined) => 
+        old ? old.filter((p) => p.id !== id) : old
+      );
+    }
+  };
+
+  const handleEdit = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate("/supplier/inventory/post");
+  };
+
+  const handleRowClick = (product: Product) => {
+    navigate(`/buyer/product/${product.id}`, { state: { product } });
   };
 
   return (
@@ -89,7 +106,9 @@ export default function InventoryManagement() {
                   const stockStatus = i % 4 === 1 ? "low_stock" : i % 4 === 3 ? "out_of_stock" : "in_stock";
                   return (
                     <motion.tr key={product.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                      transition={{ delay: i * 0.04 }} className="table-row-hover">
+                      transition={{ delay: i * 0.04 }} 
+                      className="table-row-hover cursor-pointer"
+                      onClick={() => handleRowClick(product)}>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -126,10 +145,16 @@ export default function InventoryManagement() {
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2">
-                          <button className="text-slate-400 hover:text-indigo-600 p-1.5 rounded-lg hover:bg-indigo-50 transition-colors">
+                          <button 
+                            className="text-slate-400 hover:text-indigo-600 p-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
+                            onClick={(e) => handleEdit(product.id, e)}
+                          >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
-                          <button className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition-colors">
+                          <button 
+                            className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition-colors"
+                            onClick={(e) => handleDelete(product.id, e)}
+                          >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
