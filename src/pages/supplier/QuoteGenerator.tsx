@@ -16,11 +16,21 @@ export default function QuoteGenerator() {
   const [submitted, setSubmitted] = useState(false);
   const navigate = useNavigate();
 
-  const { data: rfq, isLoading } = useQuery({
+  const editMode = searchParams.get("edit") === "true";
+
+  const { data: rfq, isLoading: rfqLoading } = useQuery({
     queryKey: ["rfq", rfqId],
     queryFn: () => getRFQById(rfqId),
     enabled: !!rfqId,
   });
+
+  const { data: quotes, isLoading: quotesLoading } = useQuery({
+    queryKey: ["quotes", rfqId],
+    queryFn: () => import("@/lib/mock-api").then(m => m.getQuotes({ rfqId })),
+    enabled: !!rfqId && editMode,
+  });
+
+  const existingQuote = quotes?.[0];
 
   const { data: matchingProducts } = useQuery({
     queryKey: ["products", rfq?.productName],
@@ -39,15 +49,22 @@ export default function QuoteGenerator() {
   useEffect(() => {
     if (rfq) {
       setValue("quantity", rfq.quantity);
-      // Determine if supplier has this product
-      if (matchingProducts && matchingProducts.length > 0) {
+      
+      if (editMode && existingQuote) {
+        setValue("price", existingQuote.price);
+        setValue("leadTimeDays", existingQuote.leadTimeDays);
+        setValue("validityDays", existingQuote.validityDays);
+        setValue("paymentTerms", existingQuote.paymentTerms);
+        setValue("logisticsTerms", existingQuote.logisticsTerms);
+        setValue("notes", existingQuote.notes || "");
+      } else if (!editMode && matchingProducts && matchingProducts.length > 0) {
         // Pre-fill price and lead time from the first matching product
         const match = matchingProducts[0];
         setValue("price", match.price);
         setValue("leadTimeDays", match.leadTimeDays);
       }
     }
-  }, [rfq, matchingProducts, setValue]);
+  }, [rfq, matchingProducts, existingQuote, editMode, setValue]);
 
   const price = watch("price");
   const quantity = rfq?.quantity || 0;
@@ -72,7 +89,7 @@ export default function QuoteGenerator() {
     setSubmitted(true);
   };
 
-  if (isLoading) {
+  if (rfqLoading || (editMode && quotesLoading)) {
     return (
       <div className="flex items-center justify-center py-20 text-indigo-600">
         <Loader2 className="w-8 h-8 animate-spin" />
@@ -244,7 +261,7 @@ export default function QuoteGenerator() {
           {isSubmitting ? (
             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
-            <><Send className="w-4 h-4" /> Submit Quote</>
+            <><Send className="w-4 h-4" /> {editMode ? "Resend Quote" : "Submit Quote"}</>
           )}
         </button>
       </form>

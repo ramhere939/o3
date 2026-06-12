@@ -36,6 +36,7 @@ async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> 
       "Content-Type": "application/json",
       ...options?.headers,
     },
+    cache: "no-store",
   });
   if (!res.ok) {
     throw new Error(`API Error: ${res.statusText}`);

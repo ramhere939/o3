@@ -54,6 +54,7 @@ function QuoteCard({
   onAccept: (id: string) => void;
   onReject: (id: string) => void;
   onNegotiate: (id: string) => void;
+  onChat: (id: string) => void;
 }) {
   const belowTarget =
     rfq.targetPrice && quote.price <= rfq.targetPrice;
@@ -164,18 +165,21 @@ function QuoteCard({
           <button
             onClick={() => onAccept(quote.id)}
             className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium py-2 rounded-lg transition-colors"
+            title="Accept Quote"
           >
-            <CheckCircle className="w-3.5 h-3.5" /> Accept
+            <CheckCircle className="w-3.5 h-3.5" />
           </button>
+
           <button
             onClick={() => onNegotiate(quote.id)}
             className="flex-1 flex items-center justify-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-medium py-2 rounded-lg transition-colors"
           >
-            <MessageSquare className="w-3.5 h-3.5" /> Negotiate
+            Negotiate
           </button>
           <button
             onClick={() => onReject(quote.id)}
             className="flex items-center justify-center gap-1.5 border border-slate-200 hover:bg-red-50 hover:border-red-200 hover:text-red-600 text-slate-500 text-xs font-medium py-2 px-3 rounded-lg transition-colors"
+            title="Reject Quote"
           >
             <XCircle className="w-3.5 h-3.5" />
           </button>
@@ -246,6 +250,9 @@ export function RFQDetailModal({
     onClose();
     navigate(`/buyer/quotes/negotiate?quoteId=${quoteId}&rfqId=${rfqId}`);
   };
+  const handleChat = (quoteId: string) => {
+    window.dispatchEvent(new CustomEvent('openChat', { detail: quoteId }));
+  };
 
   const isLoading = rfqLoading || quotesLoading;
 
@@ -310,9 +317,9 @@ export function RFQDetailModal({
                 <>
                   {/* Status banner */}
                   <div className="flex items-center justify-between bg-white rounded-xl border border-slate-200 px-4 py-3">
-                    <StatusChip status={rfq.status} />
+                    <StatusChip status={rfq.status} role={viewerRole} />
                     <div className="text-right">
-                      <p className="text-xs text-slate-400">Quotes Received</p>
+                      <p className="text-xs text-slate-400">{viewerRole === "supplier" ? "Quotes Submitted" : "Quotes Received"}</p>
                       <p className="text-xl font-bold text-indigo-600">
                         {rfq.quotesReceived}
                       </p>
@@ -411,7 +418,7 @@ export function RFQDetailModal({
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-sm font-bold text-slate-800">
-                        Quotes Received ({quotes?.length || 0})
+                        {viewerRole === "supplier" ? "Your Quotes" : "Quotes Received"} ({quotes?.length || 0})
                       </h3>
                       {viewerRole === "buyer" &&
                         (quotes?.length || 0) > 1 && (
@@ -445,6 +452,7 @@ export function RFQDetailModal({
                             onAccept={handleAccept}
                             onReject={handleReject}
                             onNegotiate={handleNegotiate}
+                            onChat={handleChat}
                           />
                         ))}
                       </div>

@@ -12,11 +12,17 @@ const colorMap: Record<string, string> = {
 interface StatusChipProps {
   status: string;
   className?: string;
+  role?: string;
 }
 
-export function StatusChip({ status, className }: StatusChipProps) {
+export function StatusChip({ status, className, role }: StatusChipProps) {
   const colorKey = getStatusColor(status);
-  const label = getStatusLabel(status);
+  let label = getStatusLabel(status);
+  
+  if (role === "supplier" && status === "quote_received") {
+    label = "Quote Sent";
+  }
+
   return (
     <span className={cn(colorMap[colorKey] || colorMap.default, className)}>
       {label}
