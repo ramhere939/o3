@@ -169,12 +169,7 @@ function QuoteCard({
           >
             <CheckCircle className="w-3.5 h-3.5" />
           </button>
-          <button
-            onClick={() => onChat(quote.id)}
-            className="flex-1 flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium py-2 rounded-lg transition-colors"
-          >
-            <MessageSquare className="w-3.5 h-3.5" /> Chat
-          </button>
+
           <button
             onClick={() => onNegotiate(quote.id)}
             className="flex-1 flex items-center justify-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-medium py-2 rounded-lg transition-colors"

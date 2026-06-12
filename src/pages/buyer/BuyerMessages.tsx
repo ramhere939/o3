@@ -123,18 +123,7 @@ export default function BuyerMessages() {
             </button>
           </div>
 
-          <div>
-            <div className="flex items-center justify-between px-3 mb-2">
-              <h3 className="text-xs font-bold text-slate-800">Projects</h3>
-              <button className="text-slate-400 hover:text-slate-600"><Plus className="w-4 h-4" /></button>
-            </div>
-            <div className="px-3 py-4 text-center">
-              <p className="text-xs text-slate-500 mb-3 italic font-serif">Manage your contacts, quotes, and orders all in one place</p>
-              <button className="w-full py-1.5 border border-slate-900 rounded-full text-sm font-bold text-slate-900 hover:bg-slate-100 transition-colors">
-                Create a project
-              </button>
-            </div>
-          </div>
+
         </div>
 
         <div className="p-4 border-t border-slate-200 flex items-center gap-4 text-slate-400">
@@ -195,19 +184,9 @@ export default function BuyerMessages() {
       <div className="flex-1 bg-white relative flex flex-col">
         {!selectedChat || !activeQuote ? (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center relative">
-            <div className="max-w-md">
-              <h2 className="text-xl font-bold text-slate-900 mb-6 leading-relaxed">
-                From product design to CRM, run your entire business in one conversation with O3.com.
-              </h2>
-              <button className="px-6 py-2 bg-white border border-indigo-600 rounded-full text-indigo-600 font-bold hover:bg-indigo-50 transition-colors">
-                Free trial
-              </button>
-            </div>
-            
-            {/* Bottom Banner */}
-            <div className="absolute bottom-0 left-0 right-0 bg-indigo-600 text-white p-3 flex items-center justify-between">
-              <span className="text-sm font-medium">Tell us about your communication experience.</span>
-              <button className="text-white/80 hover:text-white"><X className="w-4 h-4" /></button>
+            <div className="max-w-md text-slate-400">
+              <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-medium">Select a conversation to start messaging</p>
             </div>
           </div>
         ) : (

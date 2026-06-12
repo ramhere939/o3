@@ -140,7 +140,7 @@ export default function BuyerDashboard() {
               <div className="bg-white rounded-xl border border-slate-200 p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-bold text-slate-900">Orders</h3>
-                  <button onClick={() => handleTabChange('orders')} className="text-sm text-slate-500 hover:text-indigo-600 flex items-center gap-1">
+                  <button onClick={() => navigate('/buyer/dashboard?tab=orders')} className="text-sm text-slate-500 hover:text-indigo-600 flex items-center gap-1">
                     View all <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>

@@ -38,13 +38,8 @@ export default function ProductDetails() {
   const queryClient = useQueryClient();
   const [quantity, setQuantity] = useState(0);
   const [showInquiryModal, setShowInquiryModal] = useState(false);
-  const [showChatWindow, setShowChatWindow] = useState(false);
   const [inquiryMessage, setInquiryMessage] = useState("");
   const [selectedImageIdx, setSelectedImageIdx] = useState(0);
-  const [chatInput, setChatInput] = useState("");
-  const [chatMessages, setChatMessages] = useState([
-    { id: 1, sender: 'supplier', text: 'Hello, how can I help you?', time: 'Just now' }
-  ]);
 
   useEffect(() => {
     // The scroll container in this layout is the <main> element, not the window!
@@ -408,12 +403,7 @@ export default function ProductDetails() {
               >
                 Send inquiry
               </button>
-              <button
-                onClick={() => setShowChatWindow(true)}
-                className="w-full bg-white border border-slate-900 hover:bg-slate-100 text-slate-900 font-bold py-3.5 rounded-full text-center transition-colors flex items-center justify-center"
-              >
-                Chat now
-              </button>
+
               <button 
                 onClick={() => {
                   if (quantity > 0) {
@@ -595,108 +585,6 @@ export default function ProductDetails() {
         </div>
       )}
 
-      {/* Floating Chat Window */}
-      {showChatWindow && (
-        <div className="fixed bottom-0 right-4 w-[380px] h-[550px] bg-white rounded-t-xl shadow-[0_0_20px_rgba(0,0,0,0.15)] flex flex-col z-50 border border-slate-200 overflow-hidden">
-          {/* Header */}
-          <div className="bg-indigo-600 text-white p-3 flex items-center justify-between flex-shrink-0">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center font-bold text-sm">
-                {product.supplierName.charAt(0)}
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-bold truncate max-w-[200px]">{product.supplierName}</span>
-                <span className="text-[10px] text-indigo-200 flex items-center gap-1"><div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div> Online</span>
-              </div>
-            </div>
-            <button onClick={() => setShowChatWindow(false)} className="text-white hover:bg-indigo-700 p-1.5 rounded transition-colors">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Chat Body */}
-          <div className="flex-1 overflow-y-auto p-4 bg-slate-50 flex flex-col gap-4">
-            <div className="bg-white px-3 py-2 rounded shadow-sm border border-slate-100 flex items-center gap-2 self-center w-full">
-              <ShieldCheck className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-              <span className="text-[10px] text-slate-600 leading-tight">Keep chats and transactions on O3.com to enjoy order protection.</span>
-            </div>
-
-            {chatMessages.map(msg => (
-              <div key={msg.id} className={`flex flex-col max-w-[85%] ${msg.sender === 'user' ? 'self-end items-end' : 'self-start items-start'}`}>
-                <div className={`p-3 rounded-xl text-sm ${msg.sender === 'user' ? 'bg-indigo-600 text-white rounded-tr-sm' : 'bg-white text-slate-800 border border-slate-200 rounded-tl-sm'}`}>
-                  {msg.text}
-                </div>
-                <span className="text-[10px] text-slate-400 mt-1">{msg.time}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Input Area */}
-          <div className="bg-white border-t border-slate-200 flex-shrink-0">
-            {/* Product Context */}
-            <div className="p-2 border-b border-slate-100 bg-slate-50 flex items-center gap-2">
-              <div className="w-10 h-10 bg-white rounded border border-slate-200 flex-shrink-0 p-1">
-                <Package className="w-full h-full text-indigo-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-slate-800 line-clamp-1">{product.title}</p>
-                <p className="text-[10px] font-bold text-slate-900 mt-0.5">₹{currentPrice.toLocaleString("en-IN")}/piece</p>
-              </div>
-            </div>
-
-            {/* Toolbar */}
-            <div className="px-3 py-2 flex items-center gap-3 text-slate-500 border-b border-slate-100">
-              <button className="hover:text-slate-800"><Smile className="w-4 h-4" /></button>
-              <button className="hover:text-slate-800"><ImageIcon className="w-4 h-4" /></button>
-              <button className="hover:text-slate-800"><Folder className="w-4 h-4" /></button>
-              <button className="hover:text-slate-800"><FileText className="w-4 h-4" /></button>
-              <button className="hover:text-slate-800 flex items-center gap-0.5"><Languages className="w-4 h-4" /><span className="text-[10px] font-bold">A</span></button>
-            </div>
-
-            {/* Input Box */}
-            <div className="p-3 relative bg-white">
-              <textarea 
-                className="w-full resize-none border-0 focus:ring-0 p-0 text-sm bg-transparent min-h-[60px]"
-                placeholder="Please enter your message here..."
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    if (chatInput.trim()) {
-                      setChatMessages([...chatMessages, {
-                        id: Date.now(),
-                        sender: 'user',
-                        text: chatInput,
-                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                      }]);
-                      setChatInput("");
-                    }
-                  }
-                }}
-              ></textarea>
-              <div className="flex justify-end mt-2">
-                <button 
-                  onClick={() => {
-                    if (chatInput.trim()) {
-                      setChatMessages([...chatMessages, {
-                        id: Date.now(),
-                        sender: 'user',
-                        text: chatInput,
-                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                      }]);
-                      setChatInput("");
-                    }
-                  }}
-                  className={`px-5 py-1.5 rounded-full text-sm font-bold transition-colors ${chatInput.trim() ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
-                >
-                  Send
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
