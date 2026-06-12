@@ -65,6 +65,9 @@ export async function getProducts(filters?: {
           ? p.tags.toLowerCase().includes(q)
           : Array.isArray(p.tags) && p.tags.some((t: string) => t.toLowerCase().includes(q)))
     );
+  } else {
+    // Hide out-of-stock products when no explicit search is performed
+    result = result.filter((p) => p.inStock);
   }
   if (filters?.category) {
     result = result.filter((p) => p.category === filters.category);
@@ -274,9 +277,9 @@ export async function getSupplierDashboardStats(supplierId = "s1") {
 
 // ─── AI Search ───────────────────────────────────────────────────────────────
 
-export async function aiSearch(query: string) {
-  // Use Gemini to extract structured filters from the natural language query
-  const filters = await parseSearchQuery(query);
+export async function aiSearch(query: string, file?: { data: string, mimeType: string }) {
+  // Use Gemini to extract structured filters from the natural language query or uploaded document
+  const filters = await parseSearchQuery(query, file);
   
   const products = await fetchAPI<Product[]>("/products");
   
@@ -430,10 +433,10 @@ export async function parseRfqText(prompt: string, file?: { data: string, mimeTy
   });
 }
 
-export async function parseSearchQuery(prompt: string) {
+export async function parseSearchQuery(prompt: string, file?: { data: string, mimeType: string }) {
   return fetchAPI<any>("/ai/parse-search", {
     method: "POST",
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ prompt, file }),
   });
 }
 

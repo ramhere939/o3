@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { CheckCircle, ArrowLeft, FlaskConical, Paperclip, X } from "lucide-react";
+import { CheckCircle, ArrowLeft, FlaskConical, Paperclip, X, Mic, MicOff } from "lucide-react";
 import { rfqSchema, type RFQInput } from "@/lib/validations";
 import { PageHeader, SectionCard } from "@/components/shared/UIHelpers";
 import { createRFQ, parseRfqText } from "@/lib/mock-api";
@@ -15,6 +15,7 @@ export default function CreateRFQ() {
   const [submitted, setSubmitted] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
   const [isParsing, setIsParsing] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -42,6 +43,32 @@ export default function CreateRFQ() {
     queryClient.invalidateQueries({ queryKey: ["rfqs"] });
     queryClient.invalidateQueries({ queryKey: ["open-rfqs"] });
     setSubmitted(true);
+  };
+
+  const startListening = () => {
+    if (!("webkitSpeechRecognition" in window)) {
+      alert("Voice search is not supported in this browser.");
+      return;
+    }
+    // @ts-ignore
+    const SpeechRecognition = window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setAiPrompt(prev => prev ? prev + " " + transcript : transcript);
+    };
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error", event.error);
+      setIsListening(false);
+    };
+    recognition.onend = () => setIsListening(false);
+
+    recognition.start();
   };
 
   const handleAiFill = async () => {
@@ -132,17 +159,27 @@ export default function CreateRFQ() {
                 value={aiPrompt}
                 onChange={e => setAiPrompt(e.target.value)}
                 placeholder="e.g. I need 50 MT of Titanium Dioxide delivered to Mumbai next week. Or attach a document..."
-                className="w-full px-4 py-2.5 border border-indigo-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none pr-12"
+                className="w-full px-4 py-2.5 border border-indigo-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none pr-20"
                 rows={2}
               />
-              <button 
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute right-3 bottom-3 text-indigo-400 hover:text-indigo-600 transition-colors"
-                title="Attach Document"
-              >
-                <Paperclip className="w-5 h-5" />
-              </button>
+              <div className="absolute right-3 bottom-3 flex items-center gap-1">
+                <button 
+                  type="button"
+                  onClick={startListening}
+                  className={`p-1.5 transition-colors ${isListening ? 'text-rose-500 animate-pulse' : 'text-indigo-400 hover:text-indigo-600'}`}
+                  title="Voice Note"
+                >
+                  {isListening ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-1.5 text-indigo-400 hover:text-indigo-600 transition-colors"
+                  title="Attach Document"
+                >
+                  <Paperclip className="w-5 h-5" />
+                </button>
+              </div>
               <input 
                 type="file" 
                 ref={fileInputRef} 

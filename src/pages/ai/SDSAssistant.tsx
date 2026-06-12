@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FlaskConical, Send, Loader2, AlertTriangle, Shield, Package, MessageSquare } from "lucide-react";
+import { FlaskConical, Send, Loader2, AlertTriangle, Shield, Package, MessageSquare, Mic, MicOff } from "lucide-react";
 import { PageHeader, SectionCard } from "@/components/shared/UIHelpers";
 import { sdsRagChat } from "@/lib/mock-api";
 
@@ -78,7 +78,34 @@ export default function SDSAssistant() {
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState<{ role: 'ai' | 'user', text: string }[]>([]);
   const [isChatting, setIsChatting] = useState(false);
+  const [isListeningChat, setIsListeningChat] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const startListeningChat = () => {
+    if (!("webkitSpeechRecognition" in window)) {
+      alert("Voice input is not supported in this browser.");
+      return;
+    }
+    // @ts-ignore
+    const SpeechRecognition = window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => setIsListeningChat(true);
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setChatInput(prev => prev ? prev + " " + transcript : transcript);
+    };
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error", event.error);
+      setIsListeningChat(false);
+    };
+    recognition.onend = () => setIsListeningChat(false);
+
+    recognition.start();
+  };
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -255,13 +282,22 @@ export default function SDSAssistant() {
                 )}
               </div>
               <div className="p-3 bg-white border-t border-slate-200 flex items-center gap-2">
-                <input
-                  value={chatInput}
-                  onChange={e => setChatInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleChat()}
-                  placeholder="e.g. What should I do if this touches my skin?"
-                  className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
+                <div className="flex-1 relative">
+                  <input
+                    value={chatInput}
+                    onChange={e => setChatInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleChat()}
+                    placeholder="e.g. What should I do if this touches my skin?"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <button 
+                    onClick={startListeningChat}
+                    className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 transition-colors ${isListeningChat ? 'text-rose-500 animate-pulse' : 'text-slate-400 hover:text-indigo-600'}`}
+                    title="Voice Note"
+                  >
+                    {isListeningChat ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+                  </button>
+                </div>
                 <button
                   onClick={handleChat}
                   disabled={!chatInput.trim() || isChatting}

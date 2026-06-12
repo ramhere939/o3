@@ -39,7 +39,6 @@ import { useState } from "react";
 
 const buyerNav = [
   { label: "Dashboard", icon: LayoutDashboard, to: "/buyer/dashboard" },
-  { label: "AI Search", icon: Sparkles, to: "/buyer/search" },
   { label: "Create RFQ", icon: FileText, to: "/buyer/rfq/create" },
   { label: "RFQ Tracker", icon: GitPullRequest, to: "/buyer/rfq/tracker" },
   { label: "Compare Quotes", icon: Scale, to: "/buyer/quotes/compare" },
@@ -57,7 +56,6 @@ const supplierNav = [
 ];
 
 const globalNav = [
-  { label: "AI Tools", icon: Sparkles, to: "/buyer/search" },
   { label: "Price Intelligence", icon: BarChart2, to: "/price-intelligence" },
   { label: "SDS Assistant", icon: FlaskConical, to: "/sds-assistant" },
   { label: "Notifications", icon: Bell, to: "/notifications" },

@@ -351,10 +351,13 @@ Do not return markdown formatting, just the raw JSON string.`;
 });
 
 app.post('/api/ai/parse-search', async (req, res) => {
-  const { prompt } = req.body;
+  const { prompt, file } = req.body;
+  if (!prompt && !file) return res.status(400).json({ error: "Prompt or document is required" });
+
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    const systemPrompt = `You are an AI assistant. Parse the user's B2B marketplace search query into structured filters.
+    const systemPrompt = `You are an AI assistant. Parse the user's B2B marketplace search query or uploaded document into structured filters.
+If an image or document is provided, extract the chemical/product name, location (if any), max price (if any), and determine the category.
 Return ONLY valid JSON:
 {
   "search": "string (product name or chemical, or null)",
@@ -362,7 +365,18 @@ Return ONLY valid JSON:
   "maxPrice": number (or null),
   "category": "string (or null)"
 }`;
-    const result = await model.generateContent(systemPrompt + "\nUser query: " + prompt);
+    const contents: any[] = [systemPrompt + "\nUser query: " + (prompt || "Extract search filters from the attached document.")];
+    
+    if (file) {
+      contents.push({
+        inlineData: {
+          data: file.data,
+          mimeType: file.mimeType
+        }
+      });
+    }
+
+    const result = await model.generateContent(contents);
     const jsonStr = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
     res.json(JSON.parse(jsonStr));
   } catch (error) {
