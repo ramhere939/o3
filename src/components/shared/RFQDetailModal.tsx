@@ -317,9 +317,9 @@ export function RFQDetailModal({
                 <>
                   {/* Status banner */}
                   <div className="flex items-center justify-between bg-white rounded-xl border border-slate-200 px-4 py-3">
-                    <StatusChip status={rfq.status} />
+                    <StatusChip status={rfq.status} role={viewerRole} />
                     <div className="text-right">
-                      <p className="text-xs text-slate-400">Quotes Received</p>
+                      <p className="text-xs text-slate-400">{viewerRole === "supplier" ? "Quotes Submitted" : "Quotes Received"}</p>
                       <p className="text-xl font-bold text-indigo-600">
                         {rfq.quotesReceived}
                       </p>
@@ -418,7 +418,7 @@ export function RFQDetailModal({
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-sm font-bold text-slate-800">
-                        Quotes Received ({quotes?.length || 0})
+                        {viewerRole === "supplier" ? "Your Quotes" : "Quotes Received"} ({quotes?.length || 0})
                       </h3>
                       {viewerRole === "buyer" &&
                         (quotes?.length || 0) > 1 && (

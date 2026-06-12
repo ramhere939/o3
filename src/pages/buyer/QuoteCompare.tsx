@@ -16,6 +16,7 @@ import {
 import { getQuotes, getRFQById, acceptQuote } from "@/lib/mock-api";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { StatusChip } from "@/components/shared/StatusChip";
+import React from "react";
 import { PageHeader, SectionCard, EmptyState } from "@/components/shared/UIHelpers";
 
 export default function QuoteCompare() {
@@ -30,11 +31,31 @@ export default function QuoteCompare() {
     enabled: !!rfqId,
   });
 
-  const { data: quotes, isLoading: quotesLoading } = useQuery({
+  const { data: rawQuotes, isLoading: quotesLoading } = useQuery({
     queryKey: ["quotes", rfqId],
     queryFn: () => getQuotes({ rfqId }),
     enabled: !!rfqId,
   });
+
+  // Filter quotes to only show the latest quote per supplier
+  const quotes = React.useMemo(() => {
+    if (!rawQuotes) return undefined;
+    const latestQuotesMap = new Map<string, typeof rawQuotes[0]>();
+    
+    // rawQuotes is already ordered by createdAt desc from the backend,
+    // but just in case, we'll sort them to ensure the latest comes first
+    const sortedQuotes = [...rawQuotes].sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    
+    sortedQuotes.forEach(quote => {
+      if (!latestQuotesMap.has(quote.supplierId)) {
+        latestQuotesMap.set(quote.supplierId, quote);
+      }
+    });
+    
+    return Array.from(latestQuotesMap.values());
+  }, [rawQuotes]);
 
   const acceptMutation = useMutation({
     mutationFn: (quoteId: string) => acceptQuote(quoteId),

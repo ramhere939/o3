@@ -84,7 +84,7 @@ export default function RFQInbox() {
                         <h3 className="text-sm font-semibold text-slate-900 group-hover:text-indigo-700 transition-colors">
                           {rfq.productName}
                         </h3>
-                        <StatusChip status={rfq.status} />
+                        <StatusChip status={rfq.status} role="supplier" />
                       </div>
                       <p className="text-xs text-slate-400 mt-0.5">
                         {rfq.rfqNumber} · {rfq.grade}
@@ -123,12 +123,29 @@ export default function RFQInbox() {
                   className="flex-shrink-0 flex flex-col items-end gap-1.5"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <Link
-                    to={`/supplier/quotes?rfqId=${rfq.id}`}
-                    className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors"
-                  >
-                    Submit Quote <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
+                  {rfq.status === 'quote_received' || rfq.status === 'negotiating' ? (
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <Link
+                        to={`/supplier/quotes/negotiate?rfqId=${rfq.id}`}
+                        className="flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors w-full"
+                      >
+                         Chat <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                      <Link
+                        to={`/supplier/quotes?rfqId=${rfq.id}&edit=true`}
+                        className="flex items-center justify-center gap-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-medium px-4 py-2 rounded-lg transition-colors w-full"
+                      >
+                         Edit Quote
+                      </Link>
+                    </div>
+                  ) : (
+                    <Link
+                      to={`/supplier/quotes?rfqId=${rfq.id}`}
+                      className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors"
+                    >
+                      Submit Quote <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  )}
                   <p className="text-[10px] text-slate-400 flex items-center gap-0.5 justify-end">
                     <Clock className="w-3 h-3" />
                     Closes {formatDate(rfq.expiresAt)}

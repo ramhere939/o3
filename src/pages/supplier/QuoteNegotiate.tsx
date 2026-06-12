@@ -43,12 +43,13 @@ export default function SupplierQuoteNegotiate() {
     enabled: !!rfqId,
   });
 
-  const quote = quotes?.find(q => q.id === quoteId);
+  const activeQuoteId = quoteId || quotes?.[0]?.id;
+  const quote = quotes?.find(q => q.id === activeQuoteId);
 
   useEffect(() => {
-    if (!quoteId) return;
+    if (!activeQuoteId) return;
 
-    fetch(`/api/quotes/${quoteId}/messages`)
+    fetch(`/api/quotes/${activeQuoteId}/messages`)
       .then(res => res.json())
       .then(data => {
         if(Array.isArray(data)) {
@@ -61,7 +62,7 @@ export default function SupplierQuoteNegotiate() {
     setSocket(newSocket);
 
     newSocket.on("connect", () => {
-      newSocket.emit("join_quote_room", quoteId);
+      newSocket.emit("join_quote_room", activeQuoteId);
     });
 
     newSocket.on("receive_message", (msg: Message) => {
@@ -74,7 +75,7 @@ export default function SupplierQuoteNegotiate() {
     return () => {
       newSocket.disconnect();
     };
-  }, [quoteId]);
+  }, [activeQuoteId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -82,10 +83,10 @@ export default function SupplierQuoteNegotiate() {
 
   const sendMessage = () => {
     if (!input.trim() && !counterPrice) return;
-    if (!socket || !quoteId) return;
+    if (!socket || !activeQuoteId) return;
 
     const data = {
-      quoteId,
+      quoteId: activeQuoteId,
       sender: "supplier",
       text: input.trim() || "Sent a counter offer.",
       counterPrice: showCounterForm && counterPrice ? Number(counterPrice) : null,
