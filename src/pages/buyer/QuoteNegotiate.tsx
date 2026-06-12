@@ -27,9 +27,6 @@ export default function QuoteNegotiate() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [socket, setSocket] = useState<Socket | null>(null);
-  const [showCounterForm, setShowCounterForm] = useState(false);
-  const [counterPrice, setCounterPrice] = useState("");
-  const [counterLeadTime, setCounterLeadTime] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const { data: rfq, isLoading: rfqLoading } = useQuery({
@@ -99,23 +96,18 @@ export default function QuoteNegotiate() {
   }, [messages]);
 
   const sendMessage = () => {
-    if (!input.trim() && !counterPrice) return;
+    if (!input.trim()) return;
     if (!socket || !quoteId) return;
 
     const data = {
       quoteId,
       sender: "buyer",
-      text: input.trim() || "Sent a counter offer.",
-      counterPrice: showCounterForm && counterPrice ? Number(counterPrice) : null,
-      counterLeadTime: showCounterForm && counterLeadTime ? Number(counterLeadTime) : null,
+      text: input.trim(),
     };
 
     socket.emit("send_message", data);
     
     setInput("");
-    setCounterPrice("");
-    setCounterLeadTime("");
-    setShowCounterForm(false);
   };
 
   if (rfqLoading || quotesLoading) {
@@ -248,22 +240,7 @@ export default function QuoteNegotiate() {
 
           {/* Input area */}
           <div className="p-4 border-t border-slate-100 bg-slate-50">
-            {showCounterForm && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mb-3 bg-white border border-slate-200 rounded-xl p-3 grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">Proposed Price (₹/{quote.priceUnit})</label>
-                  <input type="number" value={counterPrice} onChange={(e) => setCounterPrice(e.target.value)} className="w-full text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-indigo-500" placeholder={`e.g. ${quote.price - 5}`} />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">Lead Time (Days)</label>
-                  <input type="number" value={counterLeadTime} onChange={(e) => setCounterLeadTime(e.target.value)} className="w-full text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-indigo-500" placeholder={`e.g. ${quote.leadTimeDays - 2}`} />
-                </div>
-              </motion.div>
-            )}
             <div className="flex gap-3 items-end">
-              <button onClick={() => setShowCounterForm(!showCounterForm)} className={`text-slate-400 hover:text-indigo-600 p-2 rounded-lg transition-colors ${showCounterForm ? 'bg-indigo-50 text-indigo-600' : ''}`} title="Propose Counter Offer">
-                <Paperclip className="w-4 h-4" />
-              </button>
               <div className="flex-1 relative">
                 <textarea
                   value={input}
@@ -281,7 +258,7 @@ export default function QuoteNegotiate() {
               </div>
               <button
                 onClick={sendMessage}
-                disabled={!input.trim() && !counterPrice}
+                disabled={!input.trim()}
                 className="w-10 h-10 flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 text-white rounded-xl transition-colors flex-shrink-0"
               >
                 <Send className="w-4 h-4" />

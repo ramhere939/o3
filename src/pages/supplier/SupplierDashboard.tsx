@@ -91,27 +91,27 @@ export default function SupplierDashboard() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
           <div className="flex flex-col">
             <span className="text-sm text-slate-500 flex items-center gap-1">Unique visitors (UV) <HelpCircle className="w-3 h-3"/></span>
-            <span className="text-2xl font-bold text-slate-900 mt-2 mb-1">0</span>
-            <span className="text-xs text-rose-500 font-medium">100% - vs. your peers</span>
+            <span className="text-2xl font-bold text-slate-900 mt-2 mb-1">1,245</span>
+            <span className="text-xs text-emerald-500 font-medium">12% + vs. your peers</span>
           </div>
           <div className="flex flex-col">
             <span className="text-sm text-slate-500 flex items-center gap-1">Inquiries <HelpCircle className="w-3 h-3"/></span>
-            <span className="text-2xl font-bold text-slate-900 mt-2 mb-1">0</span>
-            <span className="text-xs text-rose-500 font-medium">100% - vs. your peers</span>
+            <span className="text-2xl font-bold text-slate-900 mt-2 mb-1">45</span>
+            <span className="text-xs text-emerald-500 font-medium">5% + vs. your peers</span>
           </div>
           <div className="flex flex-col">
             <span className="text-sm text-slate-500 flex items-center gap-1">Messages <HelpCircle className="w-3 h-3"/></span>
-            <span className="text-2xl font-bold text-slate-900 mt-2 mb-1">0</span>
-            <span className="text-xs text-rose-500 font-medium">100% - vs. your peers</span>
+            <span className="text-2xl font-bold text-slate-900 mt-2 mb-1">82</span>
+            <span className="text-xs text-emerald-500 font-medium">15% + vs. your peers</span>
           </div>
           <div className="flex flex-col">
             <span className="text-sm text-slate-500 flex items-center gap-1">Store response time <HelpCircle className="w-3 h-3"/></span>
-            <span className="text-2xl font-bold text-slate-900 mt-2 mb-1">0.00hr</span>
-            <span className="text-xs text-emerald-500 font-medium">0% - vs. your peers</span>
+            <span className="text-2xl font-bold text-slate-900 mt-2 mb-1">2.50hr</span>
+            <span className="text-xs text-emerald-500 font-medium">20% faster vs. your peers</span>
           </div>
           <div className="flex flex-col border-l border-slate-100 pl-6">
             <span className="text-sm text-slate-500">Unread inquires</span>
-            <span className="text-3xl font-bold text-slate-900 mt-1 mb-3">5</span>
+            <span className="text-3xl font-bold text-slate-900 mt-1 mb-3">3</span>
           </div>
         </div>
       </div>
@@ -129,7 +129,7 @@ export default function SupplierDashboard() {
         </div>
         <ul className="space-y-4 list-disc pl-5 text-sm text-slate-700">
           <li>
-            Compared to your peers, your UV is <span className="text-rose-500">200.0%-</span>, the number of inquiries is <span className="text-rose-500">200.0%-</span>, the number of messages is <span className="text-rose-500">200.0%-</span>
+            Compared to your peers, your UV is <span className="text-emerald-500">12.0%+</span>, the number of inquiries is <span className="text-emerald-500">5.0%+</span>, the number of messages is <span className="text-emerald-500">15.0%+</span>
           </li>
           <li>
             To outperform your peers, adjust marketing strategies to increase UV and impressions, and improve your products to become Top and Super Products and get more inquiries or messages. <span className="text-indigo-600 cursor-pointer">Act Now</span>

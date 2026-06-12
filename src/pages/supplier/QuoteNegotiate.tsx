@@ -26,9 +26,6 @@ export default function SupplierQuoteNegotiate() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [socket, setSocket] = useState<Socket | null>(null);
-  const [showCounterForm, setShowCounterForm] = useState(false);
-  const [counterPrice, setCounterPrice] = useState("");
-  const [counterLeadTime, setCounterLeadTime] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const { data: rfq, isLoading: rfqLoading } = useQuery({
@@ -82,23 +79,18 @@ export default function SupplierQuoteNegotiate() {
   }, [messages]);
 
   const sendMessage = () => {
-    if (!input.trim() && !counterPrice) return;
+    if (!input.trim()) return;
     if (!socket || !activeQuoteId) return;
 
     const data = {
       quoteId: activeQuoteId,
       sender: "supplier",
-      text: input.trim() || "Sent a counter offer.",
-      counterPrice: showCounterForm && counterPrice ? Number(counterPrice) : null,
-      counterLeadTime: showCounterForm && counterLeadTime ? Number(counterLeadTime) : null,
+      text: input.trim(),
     };
 
     socket.emit("send_message", data);
     
     setInput("");
-    setCounterPrice("");
-    setCounterLeadTime("");
-    setShowCounterForm(false);
   };
 
   if (rfqLoading || quotesLoading) {
@@ -249,58 +241,6 @@ export default function SupplierQuoteNegotiate() {
                 This Quote is Accepted
               </div>
             )}
-          </SectionCard>
-
-          <SectionCard title="Submit Counter Offer" className="flex-1 flex flex-col min-h-0">
-            <div className="flex-1 overflow-y-auto pr-2 space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Proposed Price (₹/{quote.priceUnit})</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">₹</span>
-                  <input type="number" value={counterPrice} onChange={(e) => setCounterPrice(e.target.value)} className="w-full text-sm border border-slate-200 rounded-lg pl-7 pr-3 py-2.5 focus:ring-2 focus:ring-[#165DFF] outline-none" placeholder={quote.price.toString()} />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Lead Time (Days)</label>
-                <div className="relative">
-                  <input type="number" value={counterLeadTime} onChange={(e) => setCounterLeadTime(e.target.value)} className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-[#165DFF] outline-none" placeholder={quote.leadTimeDays.toString()} />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">Days</span>
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Payment Terms</label>
-                <select className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-[#165DFF] outline-none bg-white">
-                  <option>30% Advance, 70% before shipment</option>
-                  <option>100% Advance (T/T)</option>
-                  <option>Letter of Credit (L/C) at sight</option>
-                  <option>Net 30 Days</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Shipping Terms</label>
-                <select className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-[#165DFF] outline-none bg-white">
-                  <option>FOB (Free On Board)</option>
-                  <option>EXW (Ex Works)</option>
-                  <option>CIF (Cost, Insurance & Freight)</option>
-                  <option>DDP (Delivered Duty Paid)</option>
-                </select>
-              </div>
-            </div>
-            
-            <div className="pt-4 border-t border-slate-100 mt-4">
-              <button 
-                onClick={() => {
-                  setShowCounterForm(true); 
-                  if (!input) setInput(`I have prepared a counter offer based on our discussion.`);
-                  // Small delay to ensure state update before sending
-                  setTimeout(sendMessage, 50);
-                }}
-                disabled={!counterPrice && !counterLeadTime}
-                className="w-full bg-[#FF6A00] hover:bg-[#E65C00] disabled:bg-slate-200 disabled:text-slate-400 text-white font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-                Submit Offer to Buyer
-              </button>
-            </div>
           </SectionCard>
         </div>
       </div>
