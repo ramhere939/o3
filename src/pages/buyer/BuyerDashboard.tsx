@@ -117,10 +117,6 @@ export default function BuyerDashboard() {
                       <Link to="/buyer/account" className="text-xs text-indigo-600 hover:underline">Profile</Link>
                     </div>
                   </div>
-                  <button className="flex items-center gap-1 text-sm text-slate-600 hover:text-indigo-600 transition-colors">
-                    <MessageSquare className="w-4 h-4" />
-                    Online support
-                  </button>
                 </div>
 
                 <div className="grid grid-cols-3 divide-x divide-slate-100 text-center mb-6">
@@ -138,10 +134,6 @@ export default function BuyerDashboard() {
                   </div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-3 flex justify-between items-center cursor-pointer hover:bg-slate-100 transition-colors">
-                  <span className="text-sm font-bold text-slate-800">Get verified for tax-exempt status</span>
-                  <span className="text-sm text-slate-500 flex items-center gap-1">Verify business information <ChevronRight className="w-4 h-4" /></span>
-                </div>
               </div>
 
               {/* Dashboard Orders Preview */}

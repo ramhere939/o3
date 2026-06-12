@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Package, Heart, Star, MapPin, Clock, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/shared/UIHelpers";
@@ -34,6 +35,24 @@ const MOCK_FAVORITES = [
 ];
 
 export default function BuyerFavorites() {
+  const [favorites, setFavorites] = useState<any[]>([]);
+
+  useEffect(() => {
+    const existingStr = localStorage.getItem("o3_buyer_favorites");
+    if (existingStr) {
+      setFavorites(JSON.parse(existingStr));
+    } else {
+      setFavorites(MOCK_FAVORITES);
+      localStorage.setItem("o3_buyer_favorites", JSON.stringify(MOCK_FAVORITES));
+    }
+  }, []);
+
+  const removeFromFavorites = (id: string | number) => {
+    const newFavs = favorites.filter(f => f.id !== id);
+    setFavorites(newFavs);
+    localStorage.setItem("o3_buyer_favorites", JSON.stringify(newFavs));
+  };
+
   return (
     <div className="max-w-[1400px] mx-auto space-y-6 pb-10">
       <PageHeader
@@ -41,7 +60,7 @@ export default function BuyerFavorites() {
         breadcrumb={["Buyer Portal", "Favorites"]}
       />
 
-      {MOCK_FAVORITES.length === 0 ? (
+      {favorites.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-slate-200">
           <Heart className="w-16 h-16 text-slate-200 mb-4" />
           <p className="text-slate-500 font-medium mb-4">You haven't saved any products yet.</p>
@@ -51,9 +70,12 @@ export default function BuyerFavorites() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {MOCK_FAVORITES.map((product) => (
+          {favorites.map((product) => (
             <div key={product.id} className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-xl hover:border-indigo-200 transition-all group flex flex-col h-full relative">
-              <button className="absolute top-3 right-3 z-10 w-8 h-8 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-rose-500 hover:bg-rose-50 transition-colors shadow-sm">
+              <button 
+                onClick={() => removeFromFavorites(product.id)}
+                className="absolute top-3 right-3 z-10 w-8 h-8 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-rose-500 hover:bg-rose-50 transition-colors shadow-sm"
+              >
                 <Heart className="w-4 h-4 fill-rose-500" />
               </button>
               
@@ -62,7 +84,7 @@ export default function BuyerFavorites() {
                   <Star className="w-3 h-3 text-amber-500 fill-amber-500" /> {product.rating}
                 </div>
                 <img 
-                  src={[
+                  src={product.image || [
                     "/chemicals/c1.jpg",
                     "/chemicals/c2.jpg",
                     "/chemicals/c3.jpg",

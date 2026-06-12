@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { Star, MessageSquare, Heart, Share2, Shield, ShieldCheck, ChevronRight, Package, PackageOpen, ThumbsUp, X, Paperclip, Zap, ChevronDown, CheckCircle2, Award, ArrowRight, Activity, Play, Smile, Image as ImageIcon, Folder, Phone, FileText, Languages } from "lucide-react";
 import { PageHeader } from "@/components/shared/UIHelpers";
@@ -39,10 +39,19 @@ export default function ProductDetails() {
   const [showInquiryModal, setShowInquiryModal] = useState(false);
   const [showChatWindow, setShowChatWindow] = useState(false);
   const [inquiryMessage, setInquiryMessage] = useState("");
+  const [selectedImageIdx, setSelectedImageIdx] = useState(0);
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState([
     { id: 1, sender: 'supplier', text: 'Hello, how can I help you?', time: 'Just now' }
   ]);
+
+  useEffect(() => {
+    // The scroll container in this layout is the <main> element, not the window!
+    const timer = setTimeout(() => {
+      document.querySelector('main')?.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }, 10);
+    return () => clearTimeout(timer);
+  }, [id]);
 
   const stateProduct = location.state?.product;
 
@@ -94,9 +103,13 @@ export default function ProductDetails() {
       <div className="text-sm text-slate-500 mb-4 flex items-center gap-2">
         <Link to="/buyer/catalog" className="hover:text-indigo-600">Chemicals</Link>
         <ChevronRight className="w-3 h-3" />
-        <span className="hover:text-indigo-600 cursor-pointer">Pigments</span>
+        <Link to={`/buyer/catalog?category=${stateProduct?.category || 'Pigments'}`} className="hover:text-indigo-600 cursor-pointer">
+          {stateProduct?.category || "Pigments"}
+        </Link>
         <ChevronRight className="w-3 h-3" />
-        <span className="text-slate-800 font-medium">Titanium Dioxide</span>
+        <span className="text-slate-800 font-medium truncate max-w-xs" title={product.title}>
+          {product.title}
+        </span>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 items-start">
@@ -106,19 +119,46 @@ export default function ProductDetails() {
             {/* Image Gallery */}
             <div className="w-full lg:w-[400px] xl:w-[450px] p-4 flex flex-col gap-4 border-r border-slate-100 flex-shrink-0">
               <div className="aspect-square bg-slate-50 rounded-xl relative overflow-hidden group border border-slate-100 flex items-center justify-center">
-                <img src={product.images[0]} alt="Product" className="object-cover w-full h-full" />
+                <img src={product.images[selectedImageIdx]} alt="Product" className="object-cover w-full h-full" />
                 <div className="absolute top-4 right-4 flex flex-col gap-2">
-                  <button className="w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-slate-600 hover:text-rose-500 shadow-sm transition-colors">
+                  <button 
+                    onClick={() => {
+                      const existingStr = localStorage.getItem("o3_buyer_favorites");
+                      const favorites = existingStr ? JSON.parse(existingStr) : [];
+                      
+                      if (!favorites.some((f: any) => f.id === product.id)) {
+                        favorites.push({
+                          id: product.id,
+                          name: product.title,
+                          casNumber: "13463-67-7",
+                          category: "Chemicals",
+                          price: currentPrice,
+                          priceUnit: "piece",
+                          moq: 1,
+                          moqUnit: "piece",
+                          supplierName: product.supplierName,
+                          location: product.location,
+                          leadTimeDays: 7,
+                          rating: product.rating,
+                          image: product.images[selectedImageIdx]
+                        });
+                        localStorage.setItem("o3_buyer_favorites", JSON.stringify(favorites));
+                      }
+                      navigate("/buyer/favorites");
+                    }}
+                    className="w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-slate-600 hover:text-rose-500 shadow-sm transition-colors"
+                  >
                     <Heart className="w-5 h-5" />
-                  </button>
-                  <button className="w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-slate-600 hover:text-indigo-600 shadow-sm transition-colors">
-                    <Share2 className="w-5 h-5" />
                   </button>
                 </div>
               </div>
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                 {product.images.map((img, i) => (
-                  <button key={i} className={`w-20 h-20 rounded-lg flex-shrink-0 border-2 overflow-hidden bg-slate-50 flex items-center justify-center ${i === 0 ? 'border-indigo-600' : 'border-transparent'}`}>
+                  <button 
+                    key={i} 
+                    onClick={() => setSelectedImageIdx(i)}
+                    className={`w-20 h-20 rounded-lg flex-shrink-0 border-2 overflow-hidden bg-slate-50 flex items-center justify-center ${i === selectedImageIdx ? 'border-indigo-600' : 'border-transparent'}`}
+                  >
                     <img src={img} alt="Thumbnail" className="w-full h-full object-cover" />
                   </button>
                 ))}
@@ -309,7 +349,7 @@ export default function ProductDetails() {
 
         {/* Right Sidebar (Sticky Action Panel) */}
         <div className="w-full lg:w-80 flex-shrink-0">
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden sticky top-24 shadow-sm max-h-[calc(100vh-120px)] overflow-y-auto scrollbar-thin">
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden sticky top-24 shadow-sm">
             <div className="p-5 border-b border-slate-100">
               <h3 className="font-bold text-slate-900 text-lg mb-4">Shipping</h3>
               <p className="text-sm text-slate-600 mb-6">
