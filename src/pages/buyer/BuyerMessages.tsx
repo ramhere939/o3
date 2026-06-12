@@ -196,22 +196,16 @@ export default function BuyerMessages() {
         {!selectedChat || !activeQuote ? (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center relative">
             <div className="max-w-md">
-              <h2 className="text-xl font-serif font-bold text-slate-900 mb-6 leading-relaxed">
+              <h2 className="text-xl font-bold text-slate-900 mb-6 leading-relaxed">
                 From product design to CRM, run your entire business in one conversation with O3.com.
               </h2>
-              <button className="px-6 py-2 bg-white border border-slate-900 rounded-full text-slate-900 font-bold hover:bg-slate-50 transition-colors">
+              <button className="px-6 py-2 bg-white border border-indigo-600 rounded-full text-indigo-600 font-bold hover:bg-indigo-50 transition-colors">
                 Free trial
               </button>
             </div>
             
-            {/* Customer Service Floating Button */}
-            <button className="absolute right-0 top-1/2 -translate-y-1/2 bg-orange-500 text-white rounded-l-full py-2 px-4 shadow-lg flex items-center gap-2 hover:bg-orange-600 transition-colors">
-              <span className="text-sm font-medium">Customer service</span>
-              <span className="w-2 h-2 bg-emerald-400 rounded-full"></span>
-            </button>
-
             {/* Bottom Banner */}
-            <div className="absolute bottom-0 left-0 right-0 bg-[#427ed1] text-white p-3 flex items-center justify-between">
+            <div className="absolute bottom-0 left-0 right-0 bg-indigo-600 text-white p-3 flex items-center justify-between">
               <span className="text-sm font-medium">Tell us about your communication experience.</span>
               <button className="text-white/80 hover:text-white"><X className="w-4 h-4" /></button>
             </div>

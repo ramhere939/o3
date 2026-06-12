@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { Star, MessageSquare, Heart, Share2, Shield, ShieldCheck, ChevronRight, Package, PackageOpen, ThumbsUp, X, Paperclip, Zap, ChevronDown, CheckCircle2, Award, ArrowRight, Activity, Play, Smile, Image as ImageIcon, Folder, Phone, FileText, Languages } from "lucide-react";
 import { PageHeader } from "@/components/shared/UIHelpers";
+import { useApp } from "@/context/AppContext";
+import { io } from "socket.io-client";
+import { useQueryClient } from "@tanstack/react-query";
 
 const MOCK_REVIEWS = [
   {
@@ -30,6 +33,8 @@ export default function ProductDetails() {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useApp();
+  const queryClient = useQueryClient();
   const [quantity, setQuantity] = useState(0);
   const [showInquiryModal, setShowInquiryModal] = useState(false);
   const [showChatWindow, setShowChatWindow] = useState(false);
@@ -136,9 +141,9 @@ export default function ProductDetails() {
             {/* Product Info */}
             <div className="flex-1 p-6 lg:p-8 relative min-w-0">
               {/* Promotional Banner */}
-              <div className="absolute top-0 left-0 right-0 bg-[#ffe9e6] text-[#e53935] px-6 py-2 text-sm font-bold flex items-center justify-between">
+              <div className="absolute top-0 left-0 right-0 bg-indigo-50 text-indigo-700 px-6 py-2 text-sm font-bold flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="bg-[#e53935] text-white px-1.5 rounded text-xs">Sale</span>
+                  <span className="bg-indigo-600 text-white px-1.5 rounded text-xs">Sale</span>
                   Save ₹978.47 on orders over ₹9,784.65 with PayPal
                 </div>
                 <ChevronRight className="w-4 h-4" />
@@ -160,7 +165,7 @@ export default function ProductDetails() {
                   <span className="text-slate-300">|</span>
                   <span className="text-slate-600">{product.sold} sold</span>
                   <span className="text-slate-300">|</span>
-                  <span className="text-amber-600 font-medium flex items-center gap-1">
+                  <span className="text-indigo-600 font-medium flex items-center gap-1">
                     🏆 #6 most popular in Pigments
                   </span>
                 </div>
@@ -266,7 +271,7 @@ export default function ProductDetails() {
                   {/* User Profile */}
                   <div className="w-full sm:w-40 flex-shrink-0">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="w-8 h-8 rounded-full bg-[#d84a1b] text-white flex items-center justify-center font-bold text-xs">
+                      <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs">
                         {review.name.charAt(0)}
                       </div>
                       <span className="font-bold text-slate-900 text-sm">{review.name}</span>
@@ -342,7 +347,7 @@ export default function ProductDetails() {
             <div className="p-5 bg-slate-50 flex flex-col gap-3">
               <button
                 onClick={() => setShowInquiryModal(true)}
-                className="w-full bg-[#f60] hover:bg-[#e05a00] text-white font-bold py-3.5 rounded-full text-center transition-colors mb-3"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-full text-center transition-colors mb-3"
               >
                 Send inquiry
               </button>
@@ -456,27 +461,75 @@ export default function ProductDetails() {
 
             <div className="p-4 bg-white border-t border-slate-200 flex justify-center">
               <button 
-                onClick={() => {
+                onClick={async () => {
                   if (inquiryMessage.trim()) {
-                    // Mock sending logic
-                    const existingStr = localStorage.getItem("o3_mock_messages");
-                    const existing = existingStr ? JSON.parse(existingStr) : [];
-                    existing.push({
-                      id: Date.now(),
-                      supplier: product.supplierName,
-                      text: inquiryMessage,
-                      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                      isSender: true
-                    });
-                    localStorage.setItem("o3_mock_messages", JSON.stringify(existing));
-                    
-                    alert("Inquiry sent successfully to the supplier!");
-                    setShowInquiryModal(false);
+                    try {
+                      // 1. Create an RFQ for the inquiry
+                      const rfqRes = await fetch("http://localhost:3001/api/rfqs", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          buyerId: user.id || "b1",
+                          buyerName: user.name || "Buyer",
+                          productName: product.title,
+                          quantity: quantity || 1,
+                          quantityUnit: "piece",
+                          deliveryDate: new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0],
+                          deliveryLocation: "Default",
+                          paymentTerms: "Standard"
+                        })
+                      });
+                      const rfq = await rfqRes.json();
+
+                      // 2. Create a Quote room to chat in
+                      const quoteRes = await fetch("http://localhost:3001/api/quotes", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          rfqId: rfq.id,
+                          supplierId: "s1", // The mock supplier ID
+                          supplierName: product.supplierName,
+                          price: currentPrice || 0,
+                          priceUnit: "INR",
+                          totalAmount: subtotal || 0,
+                          quantity: quantity || 1,
+                          quantityUnit: "piece",
+                          leadTimeDays: 7,
+                          paymentTerms: "Standard",
+                          logisticsTerms: "Standard",
+                          validityDays: 7,
+                          validUntil: new Date(Date.now() + 7*24*60*60*1000).toISOString()
+                        })
+                      });
+                      const quote = await quoteRes.json();
+
+                      // 3. Send initial message via socket
+                      const socket = io("http://localhost:3001");
+                      socket.emit("send_message", {
+                        quoteId: quote.id,
+                        sender: "buyer",
+                        text: `[INQUIRY for ${product.title}]\n\n${inquiryMessage}`
+                      });
+
+                      alert("Inquiry sent successfully! You can track this in your Messages.");
+                      setShowInquiryModal(false);
+                      setInquiryMessage("");
+                      
+                      // Invalidate quotes so GlobalChatWidget fetches the new quote
+                      await queryClient.invalidateQueries({ queryKey: ["quotes"] });
+
+                      // Immediately open the chat widget to this new inquiry
+                      window.dispatchEvent(new CustomEvent("openChat", { detail: quote.id }));
+                      
+                    } catch (error) {
+                      console.error("Failed to send inquiry:", error);
+                      alert("Failed to send inquiry.");
+                    }
                   } else {
                     alert("Please enter an inquiry message first.");
                   }
                 }}
-                className="bg-[#f60] hover:bg-[#e05a00] text-white font-bold py-2.5 px-8 rounded-full transition-colors"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-8 rounded-full transition-colors"
               >
                 Send inquiry
               </button>

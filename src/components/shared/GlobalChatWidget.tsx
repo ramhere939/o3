@@ -34,6 +34,31 @@ export function GlobalChatWidget() {
   useEffect(() => {
     if (!quotes || quotes.length === 0) return;
 
+    // Pre-fetch message history for all active quotes so the UI is instantly ready
+    quotes.forEach(quote => {
+      fetch(`/api/quotes/${quote.id}/messages`)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data) && data.length > 0) {
+            setMessages(prev => {
+              const newMessages = [...prev];
+              let changed = false;
+              data.forEach((d: Message) => {
+                if (!newMessages.find(m => m.id === d.id)) {
+                  newMessages.push(d);
+                  changed = true;
+                }
+              });
+              if (changed) {
+                return newMessages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+              }
+              return prev;
+            });
+          }
+        })
+        .catch(console.error);
+    });
+
     const newSocket = io("http://localhost:3001");
     setSocket(newSocket);
 
@@ -52,16 +77,19 @@ export function GlobalChatWidget() {
 
       // Increment unread count if message is from the other party and chat is not actively open
       if (msg.sender !== user.role) {
-        if (!isOpen || activeQuoteId !== msg.quoteId) {
-          setUnreadCount(prev => prev + 1);
-        }
+        setIsOpen((currentIsOpen) => {
+          if (!currentIsOpen || activeQuoteId !== msg.quoteId) {
+            setUnreadCount(prevCount => prevCount + 1);
+          }
+          return currentIsOpen;
+        });
       }
     });
 
     return () => {
       newSocket.disconnect();
     };
-  }, [quotes, isOpen, activeQuoteId, user.role]);
+  }, [quotes, activeQuoteId, user.role]);
 
   // Listen for custom 'openChat' event to open from anywhere
   useEffect(() => {
@@ -84,6 +112,12 @@ export function GlobalChatWidget() {
     // Clear unread when opening a chat
     setUnreadCount(0);
 
+    // Join the room for this specific chat, to ensure we receive socket events
+    // even if it was newly created and we missed the initial bulk join
+    if (socket) {
+      socket.emit("join_quote_room", activeQuoteId);
+    }
+
     fetch(`/api/quotes/${activeQuoteId}/messages`)
       .then(res => res.json())
       .then(data => {
@@ -100,7 +134,7 @@ export function GlobalChatWidget() {
         }
       })
       .catch(console.error);
-  }, [activeQuoteId]);
+  }, [activeQuoteId, socket]);
 
   useEffect(() => {
     if (scrollRef.current) {

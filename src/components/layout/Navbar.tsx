@@ -172,7 +172,7 @@ export function Navbar({ onMobileMenuToggle }: NavbarProps) {
       </div>
 
       {/* Middle Section: Search */}
-      <form onSubmit={handleSearch} className="flex-1 max-w-xl ml-8">
+      <form onSubmit={handleSearch} className="flex-1 max-w-xl ml-4 lg:ml-8 hidden sm:block">
         <div className="flex w-full">
           <input
             type="text"
@@ -188,7 +188,7 @@ export function Navbar({ onMobileMenuToggle }: NavbarProps) {
       </form>
 
       {/* Right Section */}
-      <div className="flex items-center gap-6 ml-auto text-xs font-medium text-slate-600">
+      <div className="flex items-center gap-3 lg:gap-5 ml-auto text-xs font-medium text-slate-600 flex-shrink-0">
         {/* Profile */}
         <div className="relative" ref={profileRef}>
           <button
@@ -210,6 +210,15 @@ export function Navbar({ onMobileMenuToggle }: NavbarProps) {
           </AnimatePresence>
         </div>
 
+        {/* Messages / Inquiries */}
+        <button 
+          onClick={() => window.dispatchEvent(new CustomEvent("openChat"))}
+          className="flex items-center gap-1 hover:text-indigo-600 relative"
+        >
+          <MessageSquare className="w-4 h-4" />
+          <span className="hidden sm:inline">{user.role === "supplier" ? "Inquiries" : "Messages"}</span>
+        </button>
+
         {/* Help */}
         <button className="flex items-center hover:text-indigo-600">
           Help <ChevronDown className="w-3 h-3 ml-1" />
@@ -222,7 +231,7 @@ export function Navbar({ onMobileMenuToggle }: NavbarProps) {
             className="flex items-center gap-1 hover:text-indigo-600"
           >
             <Bell className="w-4 h-4" />
-            <span>Notifications</span>
+            <span className="hidden sm:inline">Notifications</span>
           </button>
 
           <AnimatePresence>
@@ -233,7 +242,7 @@ export function Navbar({ onMobileMenuToggle }: NavbarProps) {
         </div>
 
         {/* Language */}
-        <button className="flex items-center hover:text-indigo-600 border border-slate-200 px-3 py-1.5 rounded-full bg-slate-50">
+        <button className="hidden md:flex items-center hover:text-indigo-600 border border-slate-200 px-3 py-1.5 rounded-full bg-slate-50">
           English <ChevronDown className="w-3 h-3 ml-1" />
         </button>
       </div>
@@ -302,12 +311,15 @@ function NotificationDropdown({ onClose }: { onClose: () => void }) {
 // ─── Profile Dropdown ─────────────────────────────────────────────────────────
 
 function ProfileDropdown({ user, onClose, navigate }: { user: any; onClose: () => void; navigate: any }) {
-  const links = [
+  const links = user.role === "buyer" ? [
     { label: "My Profile", path: "/buyer/dashboard" },
     { label: "Orders", path: "/buyer/dashboard?tab=orders" },
     { label: "Messages", path: "/buyer/messages" },
     { label: "RFQs", path: "/buyer/rfq/create" },
     { label: "Favorites", path: "/buyer/favorites" },
+    { label: "Account", path: "/buyer/account" },
+  ] : [
+    { label: "Messages", path: "/buyer/messages" },
     { label: "Account", path: "/buyer/account" },
   ];
 

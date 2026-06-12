@@ -84,12 +84,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       animate={{ width: collapsed ? 72 : 240 }}
       transition={{ duration: 0.2, ease: "easeInOut" }}
       className={cn(
-        "h-screen border-r flex flex-col flex-shrink-0 overflow-hidden z-30",
-        isSupplier ? "bg-[#1A1E2F] border-[#1A1E2F]" : "bg-white border-slate-200"
+        "h-screen border-r flex flex-col flex-shrink-0 overflow-hidden z-30 bg-white border-slate-200"
       )}
     >
       {/* Logo */}
-      <div className={cn("h-16 flex items-center px-4 border-b flex-shrink-0", isSupplier ? "border-slate-700" : "border-slate-100")}>
+      <div className={cn("h-16 flex items-center px-4 border-b flex-shrink-0 border-slate-100")}>
         <div className="flex items-center gap-2.5 overflow-hidden">
           <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center flex-shrink-0">
             <Zap className="w-4 h-4 text-white" />
@@ -103,8 +102,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 transition={{ duration: 0.15 }}
                 className="flex-shrink-0"
               >
-                <span className={cn("text-lg font-bold", isSupplier ? "text-white" : "text-slate-900")}>O3</span>
-                <span className={cn("text-xs ml-1.5", isSupplier ? "text-slate-300" : "text-slate-400")}>Procurement</span>
+                <span className={cn("text-lg font-bold text-slate-900")}>O3</span>
+                <span className={cn("text-xs ml-1.5 text-slate-400")}>Procurement</span>
               </motion.div>
             )}
           </AnimatePresence>
@@ -137,9 +136,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         onClick={onToggle}
         className={cn(
           "h-12 flex items-center justify-center border-t transition-colors",
-          isSupplier
-            ? "border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800"
-            : "border-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-50"
+          "border-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-50"
         )}
         aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
@@ -170,7 +167,7 @@ function NavSection({ label, items, collapsed, isActive, isSupplier }: NavSectio
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className={cn("text-[10px] font-semibold uppercase tracking-widest px-3 mb-2", isSupplier ? "text-slate-500" : "text-slate-400")}
+            className={cn("text-[10px] font-semibold uppercase tracking-widest px-3 mb-2 text-slate-400")}
           >
             {label}
           </motion.p>
@@ -182,9 +179,6 @@ function NavSection({ label, items, collapsed, isActive, isSupplier }: NavSectio
           const active = isActive(item.to);
 
           let navItemClasses = active ? "nav-item-active" : "nav-item-inactive";
-          if (isSupplier) {
-            navItemClasses = active ? "bg-slate-800 text-white" : "text-slate-400 hover:bg-slate-800 hover:text-white";
-          }
 
           return (
             <li key={item.to}>
@@ -197,15 +191,10 @@ function NavSection({ label, items, collapsed, isActive, isSupplier }: NavSectio
                   collapsed && "justify-center px-0"
                 )}
               >
-                {/* Active Indicator for Supplier */}
-                {isSupplier && active && !collapsed && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-green-500 rounded-r" />
-                )}
-
                 <Icon
                   className={cn(
                     "flex-shrink-0 z-10",
-                    isSupplier ? (active ? "w-4 h-4 text-green-500" : "w-4 h-4") : (active ? "w-4 h-4 text-indigo-600" : "w-4 h-4")
+                    active ? "w-4 h-4 text-indigo-600" : "w-4 h-4"
                   )}
                 />
                 <AnimatePresence>

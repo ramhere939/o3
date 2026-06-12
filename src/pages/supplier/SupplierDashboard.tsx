@@ -70,10 +70,6 @@ export default function SupplierDashboard() {
               <span className="bg-[#10B981] text-white text-xs px-2 py-0.5 rounded font-medium">0-Star Supplier</span>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-sm mt-4 sm:mt-0 cursor-pointer hover:text-white/80 transition-colors">
-            <FileText className="w-4 h-4" />
-            Monthly performance report <span className="bg-white text-[#0A3DBC] w-4 h-4 flex items-center justify-center rounded text-[10px] font-bold">1</span>
-          </div>
         </div>
       </div>
 
@@ -116,9 +112,6 @@ export default function SupplierDashboard() {
           <div className="flex flex-col border-l border-slate-100 pl-6">
             <span className="text-sm text-slate-500">Unread inquires</span>
             <span className="text-3xl font-bold text-slate-900 mt-1 mb-3">5</span>
-            <button className="text-sm text-indigo-600 border border-indigo-600 rounded-full py-1.5 px-4 font-medium hover:bg-indigo-50 transition-colors w-fit">
-              Reply now
-            </button>
           </div>
         </div>
       </div>
