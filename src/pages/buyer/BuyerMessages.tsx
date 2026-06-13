@@ -148,47 +148,49 @@ export default function BuyerMessages() {
           ) : quotes?.length === 0 ? (
             <div className="p-8 text-center text-slate-500 text-sm">No active chats</div>
           ) : (
-            {[...(quotes || [])].sort((a, b) => {
-              const msgsA = messages.filter(m => m.quoteId === a.id);
-              const msgsB = messages.filter(m => m.quoteId === b.id);
-              const lastA = msgsA[msgsA.length - 1];
-              const lastB = msgsB[msgsB.length - 1];
-              const timeA = lastA ? new Date(lastA.timestamp).getTime() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
-              const timeB = lastB ? new Date(lastB.timestamp).getTime() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
-              const safeTimeA = isNaN(timeA) ? 0 : timeA;
-              const safeTimeB = isNaN(timeB) ? 0 : timeB;
-              // Always prioritize chats with messages over chats without messages
-              if (lastA && !lastB) return -1;
-              if (!lastA && lastB) return 1;
-              return safeTimeB - safeTimeA;
-            }).map(quote => {
-              const quoteMsgs = messages.filter(m => m.quoteId === quote.id);
-              const lastMsg = quoteMsgs[quoteMsgs.length - 1];
+            <div className="flex flex-col">
+              {[...(quotes || [])].sort((a, b) => {
+                const msgsA = messages.filter(m => m.quoteId === a.id);
+                const msgsB = messages.filter(m => m.quoteId === b.id);
+                const lastA = msgsA[msgsA.length - 1];
+                const lastB = msgsB[msgsB.length - 1];
+                const timeA = lastA ? new Date(lastA.timestamp).getTime() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+                const timeB = lastB ? new Date(lastB.timestamp).getTime() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+                const safeTimeA = isNaN(timeA) ? 0 : timeA;
+                const safeTimeB = isNaN(timeB) ? 0 : timeB;
+                // Always prioritize chats with messages over chats without messages
+                if (lastA && !lastB) return -1;
+                if (!lastA && lastB) return 1;
+                return safeTimeB - safeTimeA;
+              }).map(quote => {
+                const quoteMsgs = messages.filter(m => m.quoteId === quote.id);
+                const lastMsg = quoteMsgs[quoteMsgs.length - 1];
 
-              return (
-                <button
-                  key={quote.id}
-                  onClick={() => setSelectedChat(quote.id)}
-                  className={`w-full flex items-start gap-3 p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors text-left ${selectedChat === quote.id ? 'bg-indigo-50/50' : ''}`}
-                >
-                  <div className="relative">
-                    <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
-                      {quote.supplierName?.charAt(0) || "S"}
+                return (
+                  <button
+                    key={quote.id}
+                    onClick={() => setSelectedChat(quote.id)}
+                    className={`w-full flex items-start gap-3 p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors text-left ${selectedChat === quote.id ? 'bg-indigo-50/50' : ''}`}
+                  >
+                    <div className="relative">
+                      <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
+                        {quote.supplierName?.charAt(0) || "S"}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-baseline mb-0.5">
-                      <span className="font-bold text-slate-900 text-sm truncate pr-2">{quote.supplierName}</span>
-                      <span className="text-[10px] text-slate-400">
-                        {lastMsg ? new Date(lastMsg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
-                      </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline mb-0.5">
+                        <span className="font-bold text-slate-900 text-sm truncate pr-2">{quote.supplierName}</span>
+                        <span className="text-[10px] text-slate-400">
+                          {lastMsg ? new Date(lastMsg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 truncate">{lastMsg ? lastMsg.text : `Quote ${quote.quoteNumber}`}</p>
+                      <p className="text-[10px] text-slate-400 mt-1">RFQ: {quote.rfqId}</p>
                     </div>
-                    <p className="text-xs text-slate-500 truncate">{lastMsg ? lastMsg.text : `Quote ${quote.quoteNumber}`}</p>
-                    <p className="text-[10px] text-slate-400 mt-1">RFQ: {quote.rfqId}</p>
-                  </div>
-                </button>
-              );
-            })
+                  </button>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>
