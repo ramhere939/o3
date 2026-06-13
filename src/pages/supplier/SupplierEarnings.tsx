@@ -4,18 +4,18 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { DollarSign, TrendingUp, Package, CreditCard, Download } from "lucide-react";
 import { getRevenueByMonth, getOrders } from "@/lib/mock-api";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { PageHeader, SectionCard, MetricCard } from "@/components/shared/MetricCard";
+import { MetricCard } from "@/components/shared/MetricCard";
 import { PageHeader as PH, SectionCard as SC } from "@/components/shared/UIHelpers";
 
 export default function SupplierEarnings() {
   const { data: revenue } = useQuery({ queryKey: ["revenue"], queryFn: () => getRevenueByMonth("s1") });
-  const { data: orders } = useQuery({ queryKey: ["orders"], queryFn: getOrders });
+  const { data: orders } = useQuery({ queryKey: ["orders"], queryFn: () => getOrders() });
 
-  const myOrders = orders?.filter((o) => o.supplierId === "s1") || [];
-  const totalRevenue = myOrders.reduce((s, o) => s + o.totalAmount, 0);
-  const paidOrders = myOrders.filter((o) => o.paymentStatus === "paid");
-  const pendingRevenue = myOrders.filter((o) => o.paymentStatus === "pending").reduce((s, o) => s + o.totalAmount, 0);
-  const overdueRevenue = myOrders.filter((o) => o.paymentStatus === "overdue").reduce((s, o) => s + o.totalAmount, 0);
+  const myOrders = orders?.filter((o: any) => o.supplierId === "s1") || [];
+  const totalRevenue = myOrders.reduce((s: number, o: any) => s + o.totalAmount, 0);
+  const paidOrders = myOrders.filter((o: any) => o.paymentStatus === "paid");
+  const pendingRevenue = myOrders.filter((o: any) => o.paymentStatus === "pending").reduce((s: number, o: any) => s + o.totalAmount, 0);
+  const overdueRevenue = myOrders.filter((o: any) => o.paymentStatus === "overdue").reduce((s: number, o: any) => s + o.totalAmount, 0);
 
   return (
     <div className="space-y-6">
@@ -34,7 +34,7 @@ export default function SupplierEarnings() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { title: "Total Revenue", value: formatCurrency(totalRevenue), icon: <DollarSign />, color: "indigo" as const, trend: { value: 12 } },
-          { title: "Paid Invoices", value: paidOrders.length, subtitle: `${formatCurrency(paidOrders.reduce((s, o) => s + o.totalAmount, 0))}`, icon: <TrendingUp />, color: "emerald" as const },
+          { title: "Paid Invoices", value: paidOrders.length, subtitle: `${formatCurrency(paidOrders.reduce((s: number, o: any) => s + o.totalAmount, 0))}`, icon: <TrendingUp />, color: "emerald" as const },
           { title: "Pending Payment", value: formatCurrency(pendingRevenue), icon: <CreditCard />, color: "amber" as const },
           { title: "Overdue", value: formatCurrency(overdueRevenue), icon: <Package />, color: "rose" as const },
         ].map((m, i) => (
@@ -58,7 +58,7 @@ export default function SupplierEarnings() {
             <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false}
               tickFormatter={(v) => `₹${(v / 100000).toFixed(0)}L`} />
-            <Tooltip formatter={(v: number) => [formatCurrency(v), "Revenue"]}
+            <Tooltip formatter={(v: any) => [formatCurrency(v), "Revenue"]}
               contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e2e8f0" }} />
             <Area type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={2} fill="url(#revGrad)" dot={false} activeDot={{ r: 4 }} />
           </AreaChart>
@@ -77,7 +77,7 @@ export default function SupplierEarnings() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {myOrders.slice(0, 10).map((order, i) => (
+              {myOrders.slice(0, 10).map((order: any, i: number) => (
                 <motion.tr key={order.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                   transition={{ delay: i * 0.04 }} className="table-row-hover">
                   <td className="px-5 py-3">

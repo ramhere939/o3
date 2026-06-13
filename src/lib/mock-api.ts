@@ -30,7 +30,8 @@ const notifications = notificationsData as Notification[];
 // ─── HTTP Helper ─────────────────────────────────────────────────────────────
 
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`/api${endpoint}`, {
+  const API_URL = import.meta.env.VITE_API_URL || '';
+  const res = await fetch(`${API_URL}/api${endpoint}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -62,7 +63,7 @@ export async function getProducts(filters?: {
         (p.name && p.name.toLowerCase().includes(q)) ||
         (p.casNumber && p.casNumber.toLowerCase().includes(q)) ||
         (typeof p.tags === 'string'
-          ? p.tags.toLowerCase().includes(q)
+          ? (p.tags as any).toLowerCase().includes(q)
           : Array.isArray(p.tags) && p.tags.some((t: string) => t.toLowerCase().includes(q)))
     );
   } else {

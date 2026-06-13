@@ -148,8 +148,8 @@ export default function SupplierDashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false}
-                  tickFormatter={(v) => `₹${(v / 100000).toFixed(0)}L`} />
-                <Tooltip formatter={(v: number) => [formatCurrency(v), "Revenue"]}
+                  tickFormatter={(v: any) => `₹${(v / 100000).toFixed(0)}L`} />
+                <Tooltip formatter={(v: any) => [formatCurrency(v), "Revenue"]}
                   contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e2e8f0" }} />
                 <Bar dataKey="revenue" fill="#6366f1" radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -168,8 +168,8 @@ export default function SupplierDashboard() {
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false}
-                tickFormatter={(v) => `${v}%`} domain={[40, 80]} />
-              <Tooltip formatter={(v: number) => [`${v}%`, "Win Rate"]}
+                tickFormatter={(v: any) => `${v}%`} domain={[40, 80]} />
+              <Tooltip formatter={(v: any) => [`${v}%`, "Win Rate"]}
                 contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e2e8f0" }} />
               <Line type="monotone" dataKey="rate" stroke="#10b981" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
             </LineChart>

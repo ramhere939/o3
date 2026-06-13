@@ -55,7 +55,7 @@ export default function QuoteGenerator() {
         setValue("leadTimeDays", existingQuote.leadTimeDays);
         setValue("validityDays", existingQuote.validityDays);
         setValue("paymentTerms", existingQuote.paymentTerms);
-        setValue("logisticsTerms", existingQuote.logisticsTerms);
+        setValue("logisticsTerms", existingQuote.logisticsTerms as "ex_works" | "fob" | "cif" | "door_delivery");
         setValue("notes", existingQuote.notes || "");
       } else if (!editMode && matchingProducts && matchingProducts.length > 0) {
         // Pre-fill price and lead time from the first matching product

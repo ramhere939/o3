@@ -97,7 +97,7 @@ export default function Login() {
                 </button>
               ))}
               <a
-                href="http://localhost:5175"
+                href={import.meta.env.VITE_ADMIN_URL || "https://o3-eqzc.vercel.app"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-1.5 p-3 rounded-xl border-2 border-slate-200 text-slate-500 hover:border-slate-300 transition-all text-sm font-medium hover:bg-slate-50"

@@ -6,7 +6,8 @@ export default function Dashboard() {
   const { data: stats, isLoading, isError, error } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
-      const res = await fetch('/api/admin/stats');
+      const API_URL = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${API_URL}/api/admin/stats`);
       if (!res.ok) {
         const errText = await res.text();
         throw new Error(`API Error: ${res.status} - ${errText}`);
