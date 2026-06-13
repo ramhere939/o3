@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Zap, ArrowRight, Building2, ShoppingCart, CheckCircle } from "lucide-react";
 import { registerSchema, type RegisterInput } from "@/lib/validations";
 import type { UserRole } from "@/types";
+import { useApp } from "@/context/AppContext";
 
 const steps = [
   { label: "Role", desc: "Choose your role" },
@@ -18,6 +19,7 @@ export default function Register() {
   const [selectedRole, setSelectedRole] = useState<UserRole>("buyer");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const { setRole } = useApp();
 
   const { register, handleSubmit, formState: { errors, isSubmitting }, trigger } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
@@ -35,6 +37,7 @@ export default function Register() {
   };
 
   const onSubmit = async (data: RegisterInput) => {
+    setRole(selectedRole);
     await new Promise((r) => setTimeout(r, 1000));
     navigate("/otp");
   };

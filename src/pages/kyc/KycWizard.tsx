@@ -8,6 +8,7 @@ import {
   AlertCircle, X, Zap
 } from "lucide-react";
 import { kycStep1Schema, kycStep2Schema } from "@/lib/validations";
+import { useApp } from "@/context/AppContext";
 
 const steps = [
   { label: "Business Info", icon: Building2 },
@@ -35,10 +36,12 @@ export default function KycWizard() {
     setUploads((prev) => ({ ...prev, [docId]: file.name }));
   };
 
+  const { user } = useApp();
+
   const handleSubmit = async () => {
     setSubmitted(true);
     await new Promise((r) => setTimeout(r, 2000));
-    navigate("/buyer/dashboard");
+    navigate(user.role === "supplier" ? "/supplier/dashboard" : "/buyer/dashboard");
   };
 
   if (submitted) {
