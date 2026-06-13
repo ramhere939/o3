@@ -232,7 +232,15 @@ export function GlobalChatWidget() {
                     <div className="p-8 text-center text-slate-500 text-sm">No active chats</div>
                   ) : (
                     <div className="divide-y divide-slate-100">
-                      {quotes?.map((quote) => {
+                      {[...(quotes || [])].sort((a, b) => {
+                        const msgsA = messages.filter(m => m.quoteId === a.id);
+                        const msgsB = messages.filter(m => m.quoteId === b.id);
+                        const lastA = msgsA[msgsA.length - 1];
+                        const lastB = msgsB[msgsB.length - 1];
+                        const timeA = lastA ? new Date(lastA.timestamp).getTime() : new Date(a.createdAt || Date.now()).getTime();
+                        const timeB = lastB ? new Date(lastB.timestamp).getTime() : new Date(b.createdAt || Date.now()).getTime();
+                        return timeB - timeA;
+                      }).map((quote) => {
                         // Find latest message for this quote
                         const quoteMsgs = messages.filter(m => m.quoteId === quote.id);
                         const lastMsg = quoteMsgs[quoteMsgs.length - 1];
