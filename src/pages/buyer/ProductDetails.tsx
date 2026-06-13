@@ -217,7 +217,19 @@ export default function ProductDetails() {
                   ].map((seller, idx) => (
                     <div key={idx} onClick={() => {
                         navigate(`/buyer/product/${product.id}`, {
-                          state: { product: { ...activeProduct, supplierName: seller.name, location: seller.loc, price: seller.price } },
+                          state: { product: { 
+                            id: product.id,
+                            name: product.title,
+                            category: product.category,
+                            casNumber: product.casNumber,
+                            grade: product.grade,
+                            price: seller.price,
+                            supplierName: seller.name,
+                            location: seller.loc,
+                            rating: product.rating,
+                            reviewCount: product.reviews,
+                            imageUrl: product.images[0]
+                          } },
                           replace: true
                         });
                     }} className="p-4 hover:bg-slate-50 transition-colors cursor-pointer group">
@@ -588,7 +600,7 @@ export default function ProductDetails() {
                   }
                   try {
                     // 1. Create an RFQ for the inquiry
-                    const rfqRes = await fetch("http://localhost:3001/api/rfqs", {
+                    const rfqRes = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001"}/api/rfqs`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
@@ -605,7 +617,7 @@ export default function ProductDetails() {
                     const rfq = await rfqRes.json();
 
                     // 2. Create a Quote room to chat in
-                    const quoteRes = await fetch("http://localhost:3001/api/quotes", {
+                    const quoteRes = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001"}/api/quotes`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
@@ -627,7 +639,7 @@ export default function ProductDetails() {
                     const quote = await quoteRes.json();
 
                     // 3. Send initial message via socket
-                    const socket = io("http://localhost:3001");
+                    const socket = io(import.meta.env.VITE_API_URL || "http://localhost:3001");
                     socket.emit("send_message", {
                       quoteId: quote.id,
                       sender: "buyer",
@@ -659,7 +671,7 @@ export default function ProductDetails() {
                 onClick={async () => {
                   try {
                     // Create an empty RFQ/Quote and open chat without sending message
-                    const rfqRes = await fetch("http://localhost:3001/api/rfqs", {
+                    const rfqRes = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001"}/api/rfqs`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
@@ -675,7 +687,7 @@ export default function ProductDetails() {
                     });
                     const rfq = await rfqRes.json();
 
-                    const quoteRes = await fetch("http://localhost:3001/api/quotes", {
+                    const quoteRes = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001"}/api/quotes`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({

@@ -30,7 +30,7 @@ export default function BuyerMessages() {
   useEffect(() => {
     if (!quotes || quotes.length === 0) return;
 
-    const newSocket = io("http://localhost:3001");
+    const newSocket = io(import.meta.env.VITE_API_URL || "http://localhost:3001");
     setSocket(newSocket);
 
     newSocket.on("connect", () => {
