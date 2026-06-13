@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
-import { Star, MessageSquare, Heart, Share2, Shield, ShieldCheck, ChevronRight, Package, PackageOpen, ThumbsUp, X, Paperclip, Zap, ChevronDown, CheckCircle2, Award, ArrowRight, Activity, Play, Smile, Image as ImageIcon, Folder, Phone, FileText, Languages, Users } from "lucide-react";
+import { Star, MessageSquare, Heart, Share2, Shield, ShieldCheck, ChevronRight, Package, PackageOpen, ThumbsUp, X, Paperclip, Zap, ChevronDown, CheckCircle2, Award, ArrowRight, Activity, Play, Smile, Image as ImageIcon, Folder, Phone, FileText, Languages, Users, Search } from "lucide-react";
 import { PageHeader } from "@/components/shared/UIHelpers";
 import { useApp } from "@/context/AppContext";
 import { io } from "socket.io-client";
@@ -630,8 +630,8 @@ export default function ProductDetails() {
 
       {showAltSuppliers && (
         <AlternativeSuppliersModal
-          productName={product.name}
-          category={product.category}
+          productName={product.title}
+          category={product.category || "General"}
           currentSupplier={product.supplierName}
           onClose={() => setShowAltSuppliers(false)}
         />
