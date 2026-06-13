@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
-import { Star, MessageSquare, Heart, Share2, Shield, ShieldCheck, ChevronRight, Package, PackageOpen, ThumbsUp, X, Paperclip, Zap, ChevronDown, CheckCircle2, Award, ArrowRight, Activity, Play, Smile, Image as ImageIcon, Folder, Phone, FileText, Languages } from "lucide-react";
+import { Star, MessageSquare, Heart, Share2, Shield, ShieldCheck, ChevronRight, Package, PackageOpen, ThumbsUp, X, Paperclip, Zap, ChevronDown, CheckCircle2, Award, ArrowRight, Activity, Play, Smile, Image as ImageIcon, Folder, Phone, FileText, Languages, Users } from "lucide-react";
 import { PageHeader } from "@/components/shared/UIHelpers";
 import { useApp } from "@/context/AppContext";
 import { io } from "socket.io-client";
@@ -186,6 +186,38 @@ export default function ProductDetails() {
                     </p>
                   </div>
                   <span className="text-blue-600 text-xs font-bold px-2 py-1 bg-blue-100 rounded">Verified</span>
+                </div>
+              </div>
+
+              {/* Alternative Sellers */}
+              <div className="mt-4 border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-white">
+                <div className="bg-slate-50 p-3.5 border-b border-slate-200">
+                  <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                    <Users className="w-4 h-4 text-indigo-600" />
+                    Alternative Sellers
+                  </h4>
+                </div>
+                <div className="divide-y divide-slate-100">
+                  {[
+                    { name: "Global ChemCorp", loc: "Mumbai, India", price: currentPrice * 0.95 },
+                    { name: "SinoChemicals Ltd", loc: "Shanghai, China", price: currentPrice * 0.88 },
+                  ].map((seller, idx) => (
+                    <div key={idx} onClick={() => {
+                        navigate(`/buyer/product/${product.id}`, {
+                          state: { product: { ...activeProduct, supplierName: seller.name, location: seller.loc, price: seller.price } },
+                          replace: true
+                        });
+                    }} className="p-4 hover:bg-slate-50 transition-colors cursor-pointer group">
+                      <div className="flex justify-between items-start mb-1.5">
+                        <span className="font-bold text-slate-800 text-sm group-hover:text-indigo-600 transition-colors">{seller.name}</span>
+                        <span className="font-bold text-emerald-600 text-sm">₹{seller.price.toLocaleString("en-IN", {maximumFractionDigits: 0})}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <p className="text-xs text-slate-500">{seller.loc}</p>
+                        <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium">View deal</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

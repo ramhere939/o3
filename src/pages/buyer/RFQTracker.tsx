@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Clock, CheckCircle, Eye, AlertCircle, Plus, ChevronRight } from "lucide-react";
+import { Clock, CheckCircle, Eye, AlertCircle, Plus, ChevronRight, MessageSquare } from "lucide-react";
 import { getRFQs } from "@/lib/mock-api";
 import { formatDate, formatRelativeTime } from "@/lib/utils";
 import { StatusChip } from "@/components/shared/StatusChip";
@@ -134,14 +134,22 @@ export default function RFQTracker() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex flex-col items-end gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                     {rfq.status === "quote_received" && (
-                      <Link
-                        to={`/buyer/quotes/compare?rfqId=${rfq.id}`}
-                        className="flex items-center gap-1.5 text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
-                      >
-                        Compare <ChevronRight className="w-3 h-3" />
-                      </Link>
+                      <div className="flex flex-col gap-2 w-full">
+                        <Link
+                          to={`/buyer/quotes/compare?rfqId=${rfq.id}`}
+                          className="flex items-center justify-center gap-1.5 text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+                        >
+                          Compare <ChevronRight className="w-3 h-3" />
+                        </Link>
+                        <Link
+                          to={`/buyer/quotes/negotiate?rfqId=${rfq.id}`}
+                          className="flex items-center justify-center gap-1.5 text-xs bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg font-medium hover:bg-indigo-200 transition-colors"
+                        >
+                          <MessageSquare className="w-3 h-3" /> Chat
+                        </Link>
+                      </div>
                     )}
                     {(rfq.status === "viewed" || rfq.status === "sent") && (
                       <span className="flex items-center gap-1 text-xs text-slate-400">

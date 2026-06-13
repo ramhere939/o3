@@ -7,6 +7,17 @@ import { StatusChip } from "@/components/shared/StatusChip";
 import { PageHeader, SectionCard } from "@/components/shared/UIHelpers";
 import { useState } from "react";
 
+const getOrderSelectedColor = (status: string) => {
+  switch (status) {
+    case "delivered": return "border-emerald-400 bg-emerald-50";
+    case "in_transit": return "border-amber-400 bg-amber-50";
+    case "dispatched": return "border-purple-400 bg-purple-50";
+    case "invoice_generated": return "border-blue-400 bg-blue-50";
+    case "confirmed": return "border-indigo-400 bg-indigo-50";
+    default: return "border-indigo-400 bg-indigo-50";
+  }
+};
+
 export default function ShipmentTracking() {
   const [selectedOrderId, setSelectedOrderId] = useState("o3");
 
@@ -39,7 +50,7 @@ export default function ShipmentTracking() {
                 onClick={() => setSelectedOrderId(order.id)}
                 className={`w-full text-left p-4 rounded-xl border transition-all ${
                   selectedOrderId === order.id
-                    ? "border-indigo-400 bg-indigo-50 shadow-sm"
+                    ? `${getOrderSelectedColor(order.status)} shadow-sm`
                     : "border-slate-200 bg-white hover:border-slate-300"
                 }`}
               >

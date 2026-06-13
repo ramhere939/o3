@@ -15,12 +15,7 @@ export const registerSchema = z.object({
   mobile: z
     .string()
     .regex(/^[6-9]\d{9}$/, "Please enter a valid 10-digit mobile number"),
-  gstin: z
-    .string()
-    .regex(
-      /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
-      "Please enter a valid GSTIN"
-    ),
+  gstin: z.string().min(1, "GSTIN is required"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string(),
   role: z.enum(["buyer", "supplier"]),
@@ -41,17 +36,17 @@ export const kycStep1Schema = z.object({
   incorporationDate: z.string().min(1, "Required"),
   registeredAddress: z.string().min(5),
   operatingAddress: z.string().optional(),
-  website: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  website: z.string().optional(),
   annualTurnover: z.string().min(1, "Required"),
 });
 
 export const kycStep2Schema = z.object({
-  gstin: z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, "Invalid GSTIN"),
-  panNumber: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN"),
+  gstin: z.string().min(1, "GSTIN is required"),
+  panNumber: z.string().min(1, "PAN is required"),
   gstRegistrationDate: z.string().min(1, "Required"),
   gstType: z.enum(["regular", "composition", "sez"]),
   bankAccountNumber: z.string().min(9, "Invalid account number"),
-  ifscCode: z.string().regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Invalid IFSC code"),
+  ifscCode: z.string().min(1, "IFSC is required"),
   bankName: z.string().min(2),
 });
 

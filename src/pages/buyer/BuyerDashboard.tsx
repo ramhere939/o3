@@ -29,7 +29,7 @@ export default function BuyerDashboard() {
   const activeTab = queryParams.get("tab") || "dashboard";
   const navigate = useNavigate();
 
-  const ORDER_TABS = ["All", "Confirming", "Unpaid", "Preparing to ship", "Delivering", "Refunds & after-sales"];
+  const ORDER_TABS = ["All", "Confirmed", "Dispatched", "In Transit", "Delivered"];
   const [activeOrderTab, setActiveOrderTab] = useState("All");
 
   return (
@@ -76,7 +76,7 @@ export default function BuyerDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {orders.filter(o => activeOrderTab === 'All' || o.status.toLowerCase() === activeOrderTab.toLowerCase()).map(order => (
+                      {orders.filter(o => activeOrderTab === 'All' || o.status.toLowerCase() === activeOrderTab.toLowerCase().replace(" ", "_")).map(order => (
                         <tr key={order.id} className="hover:bg-slate-50 transition-colors">
                           <td className="py-3 px-4 text-sm font-semibold text-slate-900">{order.poNumber}</td>
                           <td className="py-3 px-4 text-sm text-slate-600">{order.productName}</td>
@@ -170,7 +170,7 @@ export default function BuyerDashboard() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {orders?.slice(0, 3).map((order) => (
+                    {orders?.filter(o => activeOrderTab === 'All' || o.status.toLowerCase() === activeOrderTab.toLowerCase().replace(" ", "_")).slice(0, 3).map((order) => (
                       <div key={order.id} onClick={() => navigate('/buyer/orders')} className="flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition-colors">
                         <div>
                           <p className="text-sm font-semibold text-slate-900">{order.poNumber}</p>

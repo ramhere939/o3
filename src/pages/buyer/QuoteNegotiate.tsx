@@ -41,7 +41,8 @@ export default function QuoteNegotiate() {
     enabled: !!rfqId,
   });
 
-  const quote = quotes?.find(q => q.id === quoteId);
+  const quote = quoteId ? quotes?.find(q => q.id === quoteId) : quotes?.[0];
+  const activeQuoteId = quote?.id || "";
 
   // Accept Quote Mutation
   const acceptMutation = useMutation({
@@ -60,10 +61,10 @@ export default function QuoteNegotiate() {
   });
 
   useEffect(() => {
-    if (!quoteId) return;
+    if (!activeQuoteId) return;
 
     // Fetch message history
-    fetch(`/api/quotes/${quoteId}/messages`)
+    fetch(`/api/quotes/${activeQuoteId}/messages`)
       .then(res => res.json())
       .then(data => {
         if(Array.isArray(data)) {
@@ -76,7 +77,7 @@ export default function QuoteNegotiate() {
     setSocket(newSocket);
 
     newSocket.on("connect", () => {
-      newSocket.emit("join_quote_room", quoteId);
+      newSocket.emit("join_quote_room", activeQuoteId);
     });
 
     newSocket.on("receive_message", (msg: Message) => {
@@ -89,7 +90,7 @@ export default function QuoteNegotiate() {
     return () => {
       newSocket.disconnect();
     };
-  }, [quoteId]);
+  }, [activeQuoteId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -97,10 +98,10 @@ export default function QuoteNegotiate() {
 
   const sendMessage = () => {
     if (!input.trim()) return;
-    if (!socket || !quoteId) return;
+    if (!socket || !activeQuoteId) return;
 
     const data = {
-      quoteId,
+      quoteId: activeQuoteId,
       sender: "buyer",
       text: input.trim(),
     };

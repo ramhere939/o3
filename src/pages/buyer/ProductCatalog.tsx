@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import Fuse from "fuse.js";
-import { Search, Filter, Star, MapPin, Clock, Shield, Package, ArrowRight, SlidersHorizontal, Sparkles } from "lucide-react";
+import { Search, Filter, Star, MapPin, Clock, Shield, Package, ArrowRight, SlidersHorizontal, Sparkles, Users, X } from "lucide-react";
 import { getProducts, getProductCategories } from "@/lib/mock-api";
 import { formatCurrency } from "@/lib/utils";
 import { PageHeader, EmptyState, TableSkeleton } from "@/components/shared/UIHelpers";
@@ -22,6 +22,7 @@ export default function ProductCatalog() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isAiMode, setIsAiMode] = useState(false);
+  const [alternativeProduct, setAlternativeProduct] = useState<Product | null>(null);
 
   const handleSpotPurchase = async (quantity: number, paymentTerms: string) => {
     if (!selectedProduct) return;
@@ -108,8 +109,21 @@ export default function ProductCatalog() {
     >
       <Link to={`/buyer/product/${product.id}`} state={{ product }} className="block">
         <div className="h-40 bg-slate-100 flex items-center justify-center relative overflow-hidden group-hover:bg-slate-200 transition-colors">
-          <div className="absolute top-2 right-2 bg-white/90 backdrop-blur px-2 py-1 rounded z-10 text-[10px] font-bold text-slate-600 flex items-center gap-1">
-            <Star className="w-3 h-3 text-amber-500 fill-amber-500" /> {product.rating}
+          <div className="absolute top-2 right-2 flex flex-col gap-1.5 z-10">
+            <div className="bg-white/90 backdrop-blur px-2 py-1 rounded text-[10px] font-bold text-slate-600 flex items-center gap-1 shadow-sm">
+              <Star className="w-3 h-3 text-amber-500 fill-amber-500" /> {product.rating}
+            </div>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setAlternativeProduct(product);
+              }}
+              className="bg-white/90 backdrop-blur px-2 py-1 rounded text-[10px] font-bold text-indigo-600 flex items-center justify-center gap-1 shadow-sm hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+              title="Find Alternative Sellers"
+            >
+              <Users className="w-3 h-3" /> Alternatives
+            </button>
           </div>
           {!product.inStock && (
             <div className="absolute top-2 left-2 bg-rose-100/90 backdrop-blur text-rose-700 px-2 py-1 rounded z-10 text-[10px] font-bold flex items-center gap-1 border border-rose-200">
@@ -166,7 +180,7 @@ export default function ProductCatalog() {
                 </button>
                 <Link
                   to={`/buyer/rfq/create?product=${encodeURIComponent(product.name)}`}
-                  className="flex-1 text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg text-sm transition-colors block"
+                  className="flex-1 flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg text-sm transition-colors"
                 >
                   Create RFQ
                 </Link>
@@ -376,6 +390,45 @@ export default function ProductCatalog() {
         product={selectedProduct}
         onConfirm={handleSpotPurchase}
       />
+
+      {alternativeProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="flex justify-between items-center p-4 border-b border-slate-200">
+              <h2 className="text-lg font-bold text-slate-900">Alternative Sellers for {alternativeProduct.name}</h2>
+              <button onClick={() => setAlternativeProduct(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto flex-1 bg-slate-50 space-y-3">
+               {[
+                 { name: "Global ChemCorp", loc: "Mumbai, India", price: alternativeProduct.price * 0.95, rating: 4.6 },
+                 { name: "SinoChemicals Ltd", loc: "Shanghai, China", price: alternativeProduct.price * 0.88, rating: 4.3 },
+                 { name: "EuroSynthetics GmbH", loc: "Berlin, Germany", price: alternativeProduct.price * 1.1, rating: 4.9 },
+               ].map((seller, idx) => (
+                 <div key={idx} className="bg-white p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between hover:border-indigo-300 cursor-pointer gap-4">
+                   <div className="flex-1">
+                     <h4 className="font-bold text-slate-900 text-lg">{seller.name}</h4>
+                     <p className="text-sm text-slate-500 mt-1">{seller.loc} • <Star className="inline w-3 h-3 text-amber-500 fill-amber-500 mb-0.5"/> {seller.rating} Rating</p>
+                   </div>
+                   <div className="text-left sm:text-right flex items-center sm:items-end flex-col">
+                     <p className="font-black text-indigo-700 text-xl">₹{seller.price.toLocaleString("en-IN", { maximumFractionDigits: 0 })}</p>
+                     <p className="text-xs text-slate-500 font-medium">/{alternativeProduct.priceUnit}</p>
+                   </div>
+                   <Link
+                     to={`/buyer/product/${alternativeProduct.id}`}
+                     state={{ product: { ...alternativeProduct, supplierName: seller.name, location: seller.loc, price: seller.price, rating: seller.rating } }}
+                     onClick={() => setAlternativeProduct(null)}
+                     className="w-full sm:w-auto text-center bg-indigo-50 text-indigo-700 px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-indigo-100 transition-colors border border-indigo-100"
+                   >
+                     View Deals
+                   </Link>
+                 </div>
+               ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

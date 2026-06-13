@@ -52,9 +52,9 @@ export default function KycWizard() {
           <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-10 h-10 text-emerald-600" />
           </div>
-          <h2 className="text-xl font-bold text-slate-900 mb-2">KYC Submitted!</h2>
+          <h2 className="text-xl font-bold text-slate-900 mb-2">KYC Submitted Successfully!</h2>
           <p className="text-slate-500 text-sm">
-            Your documents are under review. We typically verify within 24 hours.
+            You are now verified and can access all platform features.
           </p>
           <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
             <p className="text-xs text-amber-700">Redirecting to dashboard...</p>

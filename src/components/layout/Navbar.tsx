@@ -95,9 +95,7 @@ export function Navbar({ onMobileMenuToggle }: NavbarProps) {
           <span className="text-xl font-bold text-indigo-600 tracking-tight">O3.com</span>
         </Link>
         
-        <div className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-700">
-          <Link to="/buyer/catalog" className="hover:text-indigo-600">All categories</Link>
-        </div>
+
 
         <div className="flex items-center gap-5 ml-auto text-xs font-medium text-slate-600">
           <Link to="/buyer/messages" className="flex flex-col items-center gap-1 hover:text-indigo-600">

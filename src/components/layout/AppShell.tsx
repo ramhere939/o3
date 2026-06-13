@@ -13,18 +13,20 @@ export function AppShell() {
   const hideSidebar = location.pathname === "/buyer/catalog" || location.pathname === "/buyer/messages" || location.pathname.startsWith("/buyer/product/");
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
-      {/* Sidebar */}
-      {!hideSidebar && (
-        <Sidebar
-          collapsed={sidebarCollapsed}
-          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-        />
-      )}
+    <div className="flex flex-col h-screen bg-slate-50 overflow-hidden">
+      <Navbar />
 
-      {/* Main area */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden relative">
-        <Navbar />
+      <div className="flex flex-1 min-h-0 overflow-hidden relative">
+        {/* Sidebar */}
+        {!hideSidebar && (
+          <Sidebar
+            collapsed={sidebarCollapsed}
+            onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          />
+        )}
+
+        {/* Main area */}
+        <div className="flex flex-col flex-1 min-w-0 overflow-hidden relative">
 
         <main className="flex-1 overflow-y-auto">
           <AnimatePresence mode="wait">
@@ -44,5 +46,6 @@ export function AppShell() {
         <GlobalChatWidget />
       </div>
     </div>
+  </div>
   );
 }

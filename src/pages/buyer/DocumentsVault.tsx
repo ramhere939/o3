@@ -5,7 +5,7 @@ import { FolderOpen, FileText, Download, Upload, Shield, Search, Eye } from "luc
 import { PageHeader } from "@/components/shared/UIHelpers";
 import { getDocuments, uploadDocument } from "@/lib/mock-api";
 
-const DOC_TYPES = ["All", "KYC", "COA", "TDS", "PO", "Invoice", "Eway Bill", "SDS/MSDS", "Legal"];
+const DOC_TYPES = ["All", "COA", "TDS", "PO", "Invoice", "Eway Bill", "SDS/MSDS", "Legal"];
 
 const TYPE_COLORS: Record<string, string> = {
   KYC: "bg-emerald-100 text-emerald-700",
@@ -60,23 +60,7 @@ export default function DocumentsVault() {
         title="Documents Vault"
         subtitle="Secure storage for all compliance and transaction documents"
         breadcrumb={["Buyer Portal", "Documents Vault"]}
-        action={
-          <label className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg cursor-pointer transition-colors">
-            <Upload className="w-4 h-4" /> Upload Document
-            <input type="file" className="hidden" onChange={handleUpload} />
-          </label>
-        }
       />
-
-      {/* KYC Banner */}
-      <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-        <Shield className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-        <div className="flex-1">
-          <p className="text-sm font-medium text-emerald-800">KYC Verified</p>
-          <p className="text-xs text-emerald-600">All primary documents are verified. Next renewal: Aug 2025</p>
-        </div>
-        <span className="text-xs font-medium bg-emerald-200 text-emerald-800 px-2.5 py-1 rounded-full">✓ Active</span>
-      </div>
 
       {/* Search & Type Filter */}
       <div className="flex gap-3 flex-wrap items-center">

@@ -42,7 +42,6 @@ const buyerNav = [
   { label: "Create RFQ", icon: FileText, to: "/buyer/rfq/create" },
   { label: "RFQ Tracker", icon: GitPullRequest, to: "/buyer/rfq/tracker" },
   { label: "Compare Quotes", icon: Scale, to: "/buyer/quotes/compare" },
-  { label: "Negotiate", icon: MessageSquare, to: "/buyer/quotes/negotiate" },
   { label: "Shipment Tracking", icon: Truck, to: "/buyer/shipments" },
   { label: "Documents Vault", icon: FolderOpen, to: "/buyer/documents" },
 ];
@@ -82,31 +81,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       animate={{ width: collapsed ? 72 : 240 }}
       transition={{ duration: 0.2, ease: "easeInOut" }}
       className={cn(
-        "h-screen border-r flex flex-col flex-shrink-0 overflow-hidden z-30 bg-white border-slate-200"
+        "h-full border-r flex flex-col flex-shrink-0 overflow-hidden z-30 bg-white border-slate-200"
       )}
     >
-      {/* Logo */}
-      <div className={cn("h-16 flex items-center px-4 border-b flex-shrink-0 border-slate-100")}>
-        <div className="flex items-center gap-2.5 overflow-hidden">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center flex-shrink-0">
-            <Zap className="w-4 h-4 text-white" />
-          </div>
-          <AnimatePresence>
-            {!collapsed && (
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.15 }}
-                className="flex-shrink-0"
-              >
-                <span className={cn("text-lg font-bold text-slate-900")}>O3</span>
-                <span className={cn("text-xs ml-1.5 text-slate-400")}>Procurement</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
+
 
       {/* Nav sections */}
       <div className="flex-1 overflow-y-auto py-4 space-y-6 px-2 scrollbar-hide">

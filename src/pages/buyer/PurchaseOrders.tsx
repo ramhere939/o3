@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ShoppingCart, Download, AlertCircle } from "lucide-react";
 import { getOrders } from "@/lib/mock-api";
@@ -8,6 +9,7 @@ import { PageHeader, SectionCard, EmptyState, TableSkeleton } from "@/components
 import { useState } from "react";
 
 export default function PurchaseOrders() {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState("");
   const { data: orders, isLoading } = useQuery({ 
     queryKey: ["orders"], 
@@ -58,7 +60,8 @@ export default function PurchaseOrders() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: i * 0.04 }}
-                    className="table-row-hover"
+                    onClick={() => navigate('/buyer/shipments')}
+                    className="table-row-hover cursor-pointer"
                   >
                     <td className="px-5 py-4">
                       <p className="text-sm font-semibold text-slate-900">{order.poNumber}</p>
