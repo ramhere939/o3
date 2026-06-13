@@ -176,74 +176,82 @@ export default function AISearchHub({ embedded = false }: { embedded?: boolean }
         )}
 
         {results && !isFetching && (
-          <motion.div key="results" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-slate-600">
-                Found <strong>{results.length} suppliers</strong> matching your query
-              </p>
-              <span className="text-xs text-slate-400 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-full">
-                AI-powered results
-              </span>
+              <h2 className="text-lg font-bold text-slate-900">Recommended Suppliers</h2>
+              <span className="text-sm text-slate-500">{results?.length || 0} matches found</span>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {results.map((result, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.08 }}
-                  className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md hover:-translate-y-0.5 transition-all"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-semibold text-slate-900">{result.product}</h3>
-                        {result.o3Assured && (
-                          <span className="flex items-center gap-1 text-[10px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full font-medium">
-                            <Shield className="w-3 h-3" /> O3 Assured
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-slate-500 mt-0.5">{result.supplier}</p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                      <span className="text-xs font-medium text-slate-700">{result.supplierRating}</span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-slate-50 rounded-lg p-3">
-                      <p className="text-[10px] text-slate-400 uppercase tracking-wide">Price</p>
-                      <p className="text-base font-bold text-indigo-600 mt-0.5">
-                        ₹{result.price.toLocaleString("en-IN")}
-                        <span className="text-xs text-slate-400 font-normal ml-1">{result.priceUnit}</span>
-                      </p>
-                    </div>
-                    <div className="bg-slate-50 rounded-lg p-3">
-                      <p className="text-[10px] text-slate-400 uppercase tracking-wide">Lead Time</p>
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <Clock className="w-3.5 h-3.5 text-slate-400" />
-                        <p className="text-base font-bold text-slate-800">{result.leadTimeDays} days</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 mb-4">
-                    <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                    <span className="text-xs text-slate-500">{result.location}</span>
-                  </div>
-
-                  <Link 
-                    to={`/buyer/rfq/create?product=${encodeURIComponent(result.product)}`}
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+            
+            {results?.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
+                <Search className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-slate-900 mb-1">No matches found</h3>
+                <p className="text-sm text-slate-500">We couldn't find any products matching your specific search criteria. Try a broader term or different keywords.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {results?.map((result, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg transition-all"
                   >
-                    Request Quote <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-semibold text-slate-900">{result.product}</h3>
+                          {result.o3Assured && (
+                            <span className="flex items-center gap-1 text-[10px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full font-medium">
+                              <Shield className="w-3 h-3" /> O3 Assured
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-500 mt-0.5">{result.supplier}</p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                        <span className="text-xs font-medium text-slate-700">{result.supplierRating}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div className="bg-slate-50 rounded-lg p-3">
+                        <p className="text-[10px] text-slate-400 uppercase tracking-wide">Price</p>
+                        <p className="text-base font-bold text-indigo-600 mt-0.5">
+                          ₹{result.price.toLocaleString("en-IN")}
+                          <span className="text-xs text-slate-400 font-normal ml-1">{result.priceUnit}</span>
+                        </p>
+                      </div>
+                      <div className="bg-slate-50 rounded-lg p-3">
+                        <p className="text-[10px] text-slate-400 uppercase tracking-wide">Lead Time</p>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          <p className="text-base font-bold text-slate-800">{result.leadTimeDays} days</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 mb-4">
+                      <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                      <span className="text-xs text-slate-500">{result.location}</span>
+                    </div>
+
+                    <Link 
+                      to={`/buyer/rfq/create?product=${encodeURIComponent(result.product)}`}
+                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    >
+                      Request Quote <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

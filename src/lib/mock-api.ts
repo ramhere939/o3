@@ -308,12 +308,12 @@ export async function aiSearch(query: string, file?: { data: string, mimeType: s
   }
 
   if (filters.category) {
-    matchedProducts = matchedProducts.filter((p) => p.category?.toLowerCase() === filters.category?.toLowerCase());
-  }
-
-  // Fallback if no matches found
-  if (matchedProducts.length === 0) {
-    matchedProducts = products.slice(0, 6);
+    const cat = filters.category.toLowerCase();
+    const catMatched = matchedProducts.filter((p) => p.category?.toLowerCase().includes(cat));
+    // Only apply category filter if it doesn't eliminate all results
+    if (catMatched.length > 0) {
+      matchedProducts = catMatched;
+    }
   }
   
   // Here we simulate the "Supplier Recommendation Engine" by ranking them based on supplier rating and price.
