@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Clock, CheckCircle, Eye, AlertCircle, Plus, ChevronRight, MessageSquare, XCircle } from "lucide-react";
+import { Clock, CheckCircle, Eye, AlertCircle, Plus, ChevronRight, MessageSquare, XCircle, ShoppingCart } from "lucide-react";
 import { getRFQs } from "@/lib/mock-api";
 import { formatDate, formatRelativeTime } from "@/lib/utils";
 import { StatusChip } from "@/components/shared/StatusChip";
@@ -141,7 +141,16 @@ export default function RFQTracker() {
 
                   {/* Actions */}
                   <div className="flex flex-col items-end gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                    {(rfq.status === "quote_received" || rfq.status === "rejected" || rfq.status === "accepted") && (
+                    {rfq.status === "accepted" ? (
+                      <div className="flex flex-col gap-2 w-full">
+                        <Link
+                          to="/buyer/orders"
+                          className="flex items-center justify-center gap-1.5 text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-emerald-700 transition-colors"
+                        >
+                          <ShoppingCart className="w-3 h-3" /> View PO
+                        </Link>
+                      </div>
+                    ) : (rfq.status === "quote_received" || rfq.status === "rejected") && (
                       <div className="flex flex-col gap-2 w-full">
                         <Link
                           to={`/buyer/quotes/compare?rfqId=${rfq.id}`}
