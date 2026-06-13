@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle, Package, Loader2 } from "lucide-react";
 import type { Product } from "@/types";
@@ -16,6 +16,12 @@ export function SpotPurchaseModal({ isOpen, onClose, product, onConfirm }: SpotP
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  useEffect(() => {
+    if (product?.moq) {
+      setQuantity(product.moq);
+    }
+  }, [product]);
+
   if (!isOpen || !product) return null;
 
   const totalValue = quantity * product.price;
@@ -23,7 +29,33 @@ export function SpotPurchaseModal({ isOpen, onClose, product, onConfirm }: SpotP
   const handleSubmit = async () => {
     if (quantity < product.moq) return;
     setIsSubmitting(true);
-    await onConfirm(quantity, paymentTerms);
+    
+    // Add to cart
+    const saved = localStorage.getItem("o3_buyer_cart");
+    const cart = saved ? JSON.parse(saved) : [];
+    const newItem = {
+      id: Date.now(),
+      supplier: product.supplierName,
+      product: product.name,
+      cas: product.casNumber || "13463-67-7",
+      price: product.price,
+      quantity: quantity,
+      unit: product.priceUnit,
+      total: totalValue,
+      image: "/chemicals/c1.jpg"
+    };
+    
+    const existingIdx = cart.findIndex((x: any) => x.product === newItem.product);
+    if (existingIdx >= 0) {
+      cart[existingIdx].quantity += quantity;
+      cart[existingIdx].total += totalValue;
+    } else {
+      cart.push(newItem);
+    }
+
+    localStorage.setItem("o3_buyer_cart", JSON.stringify(cart));
+    window.dispatchEvent(new Event("cartUpdated"));
+    
     setIsSubmitting(false);
     setIsSuccess(true);
   };
@@ -47,9 +79,9 @@ export function SpotPurchaseModal({ isOpen, onClose, product, onConfirm }: SpotP
               <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-8 h-8 text-emerald-600" />
               </div>
-              <h2 className="text-xl font-bold text-slate-900 mb-2">Order Confirmed!</h2>
+              <h2 className="text-xl font-bold text-slate-900 mb-2">Added to Cart!</h2>
               <p className="text-slate-500 text-sm mb-6">
-                Your spot purchase order has been placed with {product.supplierName}.
+                Your product has been added to your cart successfully.
               </p>
               <button
                 onClick={handleClose}
@@ -62,7 +94,7 @@ export function SpotPurchaseModal({ isOpen, onClose, product, onConfirm }: SpotP
             <>
               <div className="flex items-center justify-between p-4 border-b border-slate-100">
                 <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-                  <Package className="w-5 h-5 text-indigo-600" /> Spot Purchase
+                  <Package className="w-5 h-5 text-indigo-600" /> Add to Cart
                 </h3>
                 <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-md text-slate-400">
                   <X className="w-5 h-5" />
@@ -122,7 +154,7 @@ export function SpotPurchaseModal({ isOpen, onClose, product, onConfirm }: SpotP
                   disabled={quantity < product.moq || isSubmitting}
                   className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl text-sm font-medium transition-colors flex justify-center items-center gap-2"
                 >
-                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirm Order"}
+                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Add to Cart"}
                 </button>
               </div>
             </>

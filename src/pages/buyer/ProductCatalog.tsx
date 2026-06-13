@@ -8,6 +8,7 @@ import { getProducts, getProductCategories } from "@/lib/mock-api";
 import { formatCurrency } from "@/lib/utils";
 import { PageHeader, EmptyState, TableSkeleton } from "@/components/shared/UIHelpers";
 import { SpotPurchaseModal } from "@/components/SpotPurchaseModal";
+import { AlternativeSuppliersModal } from "@/components/shared/AlternativeSuppliersModal";
 import AISearchHub from "./AISearchHub";
 import { createOrder } from "@/lib/mock-api";
 import type { Product } from "@/types";
@@ -21,6 +22,7 @@ export default function ProductCatalog() {
   const [maxPrice, setMaxPrice] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [altModalProduct, setAltModalProduct] = useState<any>(null);
   const [isAiMode, setIsAiMode] = useState(false);
   const [alternativeProduct, setAlternativeProduct] = useState<Product | null>(null);
 
@@ -167,6 +169,17 @@ export default function ProductCatalog() {
               3 YRS
             </span>
             <span className="text-[10px] text-slate-500 ml-1 truncate max-w-[80px]">{product.supplierName}</span>
+            <Search 
+              className="w-3.5 h-3.5 text-indigo-500 cursor-pointer hover:text-indigo-700 ml-auto" 
+              onClick={(e) => {
+                e.preventDefault();
+                setAltModalProduct({
+                  name: product.name,
+                  category: product.category,
+                  supplierName: product.supplierName
+                });
+              }}
+            />
           </div>
 
           <div className="mt-auto pt-2 flex items-center gap-2">
@@ -391,43 +404,13 @@ export default function ProductCatalog() {
         onConfirm={handleSpotPurchase}
       />
 
-      {alternativeProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[80vh]">
-            <div className="flex justify-between items-center p-4 border-b border-slate-200">
-              <h2 className="text-lg font-bold text-slate-900">Alternative Sellers for {alternativeProduct.name}</h2>
-              <button onClick={() => setAlternativeProduct(null)} className="text-slate-400 hover:text-slate-600">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-4 overflow-y-auto flex-1 bg-slate-50 space-y-3">
-               {[
-                 { name: "Global ChemCorp", loc: "Mumbai, India", price: alternativeProduct.price * 0.95, rating: 4.6 },
-                 { name: "SinoChemicals Ltd", loc: "Shanghai, China", price: alternativeProduct.price * 0.88, rating: 4.3 },
-                 { name: "EuroSynthetics GmbH", loc: "Berlin, Germany", price: alternativeProduct.price * 1.1, rating: 4.9 },
-               ].map((seller, idx) => (
-                 <div key={idx} className="bg-white p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between hover:border-indigo-300 cursor-pointer gap-4">
-                   <div className="flex-1">
-                     <h4 className="font-bold text-slate-900 text-lg">{seller.name}</h4>
-                     <p className="text-sm text-slate-500 mt-1">{seller.loc} • <Star className="inline w-3 h-3 text-amber-500 fill-amber-500 mb-0.5"/> {seller.rating} Rating</p>
-                   </div>
-                   <div className="text-left sm:text-right flex items-center sm:items-end flex-col">
-                     <p className="font-black text-indigo-700 text-xl">₹{seller.price.toLocaleString("en-IN", { maximumFractionDigits: 0 })}</p>
-                     <p className="text-xs text-slate-500 font-medium">/{alternativeProduct.priceUnit}</p>
-                   </div>
-                   <Link
-                     to={`/buyer/product/${alternativeProduct.id}`}
-                     state={{ product: { ...alternativeProduct, supplierName: seller.name, location: seller.loc, price: seller.price, rating: seller.rating } }}
-                     onClick={() => setAlternativeProduct(null)}
-                     className="w-full sm:w-auto text-center bg-indigo-50 text-indigo-700 px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-indigo-100 transition-colors border border-indigo-100"
-                   >
-                     View Deals
-                   </Link>
-                 </div>
-               ))}
-            </div>
-          </div>
-        </div>
+      {altModalProduct && (
+        <AlternativeSuppliersModal
+          productName={altModalProduct.name}
+          category={altModalProduct.category}
+          currentSupplier={altModalProduct.supplierName}
+          onClose={() => setAltModalProduct(null)}
+        />
       )}
     </div>
   );

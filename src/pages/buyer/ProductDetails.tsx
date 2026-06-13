@@ -6,6 +6,7 @@ import { useApp } from "@/context/AppContext";
 import { io } from "socket.io-client";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { getProductById } from "@/lib/mock-api";
+import { AlternativeSuppliersModal } from "@/components/shared/AlternativeSuppliersModal";
 
 const MOCK_REVIEWS = [
   {
@@ -40,6 +41,7 @@ export default function ProductDetails() {
   const [showInquiryModal, setShowInquiryModal] = useState(false);
   const [inquiryMessage, setInquiryMessage] = useState("");
   const [selectedImageIdx, setSelectedImageIdx] = useState(0);
+  const [showAltSuppliers, setShowAltSuppliers] = useState(false);
 
   useEffect(() => {
     // The scroll container in this layout is the <main> element, not the window!
@@ -185,7 +187,16 @@ export default function ProductDetails() {
                       🇨🇳 {product.location} • {product.supplierYears} yrs • Custom Manufacturer
                     </p>
                   </div>
-                  <span className="text-blue-600 text-xs font-bold px-2 py-1 bg-blue-100 rounded">Verified</span>
+                  <div className="flex flex-col items-end gap-2">
+                    <span className="text-blue-600 text-xs font-bold px-2 py-1 bg-blue-100 rounded">Verified</span>
+                    <button
+                      onClick={() => setShowAltSuppliers(true)}
+                      className="text-xs text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+                    >
+                      <Search className="w-3 h-3" />
+                      Alternative Suppliers
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -615,6 +626,15 @@ export default function ProductDetails() {
             </div>
           </div>
         </div>
+      )}
+
+      {showAltSuppliers && (
+        <AlternativeSuppliersModal
+          productName={product.name}
+          category={product.category}
+          currentSupplier={product.supplierName}
+          onClose={() => setShowAltSuppliers(false)}
+        />
       )}
 
     </div>
