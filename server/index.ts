@@ -144,6 +144,14 @@ app.patch('/api/quotes/:id', async (req, res) => {
     where: { id: req.params.id },
     data: { status }
   });
+
+  if (status === 'rejected') {
+    await prisma.rFQ.update({
+      where: { id: updatedQuote.rfqId },
+      data: { status: 'rejected' }
+    });
+  }
+
   res.json(updatedQuote);
 });
 

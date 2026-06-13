@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Clock, CheckCircle, Eye, AlertCircle, Plus, ChevronRight, MessageSquare } from "lucide-react";
+import { Clock, CheckCircle, Eye, AlertCircle, Plus, ChevronRight, MessageSquare, XCircle } from "lucide-react";
 import { getRFQs } from "@/lib/mock-api";
 import { formatDate, formatRelativeTime } from "@/lib/utils";
 import { StatusChip } from "@/components/shared/StatusChip";
@@ -14,6 +14,7 @@ const STATUS_FILTERS: { label: string; value: string }[] = [
   { label: "Sent", value: "sent" },
   { label: "Viewed", value: "viewed" },
   { label: "Quote Received", value: "quote_received" },
+  { label: "Rejected", value: "rejected" },
   { label: "Expired", value: "expired" },
 ];
 
@@ -21,12 +22,14 @@ const TIMELINE_ICONS: Record<string, React.ElementType> = {
   sent: Clock,
   viewed: Eye,
   quote_received: CheckCircle,
+  rejected: XCircle,
   expired: AlertCircle,
 };
 const TIMELINE_COLORS: Record<string, string> = {
   sent: "text-blue-500 bg-blue-50 border-blue-200",
   viewed: "text-violet-500 bg-violet-50 border-violet-200",
   quote_received: "text-emerald-500 bg-emerald-50 border-emerald-200",
+  rejected: "text-red-500 bg-red-50 border-red-200",
   expired: "text-slate-400 bg-slate-50 border-slate-200",
 };
 
@@ -135,7 +138,7 @@ export default function RFQTracker() {
 
                   {/* Actions */}
                   <div className="flex flex-col items-end gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                    {rfq.status === "quote_received" && (
+                    {(rfq.status === "quote_received" || rfq.status === "rejected") && (
                       <div className="flex flex-col gap-2 w-full">
                         <Link
                           to={`/buyer/quotes/compare?rfqId=${rfq.id}`}
@@ -143,12 +146,22 @@ export default function RFQTracker() {
                         >
                           Compare <ChevronRight className="w-3 h-3" />
                         </Link>
-                        <Link
-                          to={`/buyer/quotes/negotiate?rfqId=${rfq.id}`}
-                          className="flex items-center justify-center gap-1.5 text-xs bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg font-medium hover:bg-indigo-200 transition-colors"
-                        >
-                          <MessageSquare className="w-3 h-3" /> Chat
-                        </Link>
+                        {rfq.status === "rejected" ? (
+                          <button
+                            onClick={(e) => { e.preventDefault(); alert("Can't chat for rejected quotes"); }}
+                            className="flex items-center justify-center gap-1.5 text-xs bg-slate-100 text-slate-400 px-3 py-1.5 rounded-lg font-medium cursor-not-allowed"
+                            title="Cannot chat for rejected quotes"
+                          >
+                            <MessageSquare className="w-3 h-3" /> Chat
+                          </button>
+                        ) : (
+                          <Link
+                            to={`/buyer/quotes/negotiate?rfqId=${rfq.id}`}
+                            className="flex items-center justify-center gap-1.5 text-xs bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg font-medium hover:bg-indigo-200 transition-colors"
+                          >
+                            <MessageSquare className="w-3 h-3" /> Chat
+                          </Link>
+                        )}
                       </div>
                     )}
                     {(rfq.status === "viewed" || rfq.status === "sent") && (
