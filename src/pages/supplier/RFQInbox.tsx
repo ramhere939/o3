@@ -123,7 +123,7 @@ export default function RFQInbox() {
                   className="flex-shrink-0 flex flex-col items-end gap-1.5"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {rfq.status === 'quote_received' || rfq.status === 'negotiating' ? (
+                  {(rfq.status as string) === 'quote_received' || (rfq.status as string) === 'negotiating' ? (
                     <div className="flex flex-col gap-1.5 w-full">
                       <Link
                         to={`/supplier/quotes/negotiate?rfqId=${rfq.id}`}

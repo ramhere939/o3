@@ -62,7 +62,7 @@ export async function getProducts(filters?: {
         (p.name && p.name.toLowerCase().includes(q)) ||
         (p.casNumber && p.casNumber.toLowerCase().includes(q)) ||
         (typeof p.tags === 'string'
-          ? p.tags.toLowerCase().includes(q)
+          ? (p.tags as any).toLowerCase().includes(q)
           : Array.isArray(p.tags) && p.tags.some((t: string) => t.toLowerCase().includes(q)))
     );
   } else {

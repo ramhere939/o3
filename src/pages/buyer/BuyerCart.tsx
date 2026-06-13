@@ -26,9 +26,21 @@ const MOCK_CART = [
   }
 ];
 
+export interface CartItem {
+  id: number;
+  supplier: string;
+  product: string;
+  cas: string;
+  price: number;
+  quantity: number;
+  unit: string;
+  total: number;
+  image?: string;
+}
+
 export default function BuyerCart() {
   const location = useLocation();
-  const [cartItems, setCartItems] = useState(() => {
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     const saved = localStorage.getItem("o3_buyer_cart");
     return saved ? JSON.parse(saved) : MOCK_CART;
   });
@@ -40,9 +52,9 @@ export default function BuyerCart() {
 
   useEffect(() => {
     if (location.state?.newCartItem) {
-      setCartItems(prev => {
-        const newItem = location.state.newCartItem;
-        const existingIdx = prev.findIndex(item => item.product === newItem.product);
+      setCartItems((prev: CartItem[]) => {
+        const newItem = location.state.newCartItem as CartItem;
+        const existingIdx = prev.findIndex((item: CartItem) => item.product === newItem.product);
         if (existingIdx >= 0) {
           const next = [...prev];
           next[existingIdx] = {
@@ -58,7 +70,7 @@ export default function BuyerCart() {
     }
   }, [location.state]);
 
-  const subtotal = cartItems.reduce((acc, item) => acc + item.total, 0);
+  const subtotal = cartItems.reduce((acc: number, item: CartItem) => acc + item.total, 0);
 
   return (
     <div className="max-w-[1200px] mx-auto space-y-6 pb-10">
@@ -75,7 +87,7 @@ export default function BuyerCart() {
             <span className="w-24 text-right">Total</span>
           </div>
 
-          {cartItems.map((item) => (
+          {cartItems.map((item: CartItem) => (
             <div key={item.id} className="bg-white rounded-xl border border-slate-200 p-6 flex flex-col sm:flex-row gap-6 items-start sm:items-center">
               <div className="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden border border-slate-200">
                 {item.image ? (
@@ -95,7 +107,7 @@ export default function BuyerCart() {
                 <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden">
                   <button onClick={() => {
                     const next = [...cartItems];
-                    const i = next.findIndex(x => x.id === item.id);
+                    const i = next.findIndex((x: CartItem) => x.id === item.id);
                     if (next[i].quantity > 1) {
                       next[i] = { ...next[i], quantity: next[i].quantity - 1, total: (next[i].quantity - 1) * next[i].price };
                       setCartItems(next);
@@ -104,7 +116,7 @@ export default function BuyerCart() {
                   <input type="number" value={item.quantity} readOnly className="w-16 text-center text-sm font-medium border-x border-slate-200 py-1 bg-slate-50" />
                   <button onClick={() => {
                     const next = [...cartItems];
-                    const i = next.findIndex(x => x.id === item.id);
+                    const i = next.findIndex((x: CartItem) => x.id === item.id);
                     next[i] = { ...next[i], quantity: next[i].quantity + 1, total: (next[i].quantity + 1) * next[i].price };
                     setCartItems(next);
                   }} className="px-3 py-1 text-slate-500 hover:bg-slate-100 transition-colors bg-white font-bold">+</button>
@@ -116,7 +128,7 @@ export default function BuyerCart() {
               </div>
 
               <button onClick={() => {
-                setCartItems(cartItems.filter(x => x.id !== item.id));
+                setCartItems(cartItems.filter((x: CartItem) => x.id !== item.id));
               }} className="text-slate-400 hover:text-rose-500 transition-colors p-2">
                 <Trash2 className="w-5 h-5" />
               </button>

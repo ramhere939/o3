@@ -50,8 +50,7 @@ export default function CreateRFQ() {
       alert("Voice search is not supported in this browser.");
       return;
     }
-    // @ts-ignore
-    const SpeechRecognition = window.webkitSpeechRecognition;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = false;

@@ -42,7 +42,7 @@ import ContentHub from "./pages/content/ContentHub";
 import NotificationsPage from "./pages/notifications/NotificationsPage";
 
 function AppRoutes() {
-  const { role } = useApp();
+  const { user } = useApp();
 
   return (
     <Routes>
@@ -90,7 +90,7 @@ function AppRoutes() {
       </Route>
 
       {/* Fallback */}
-      <Route path="*" element={<Navigate to={role === "buyer" ? "/buyer/dashboard" : "/supplier/dashboard"} replace />} />
+      <Route path="*" element={<Navigate to={user?.role === "buyer" ? "/buyer/dashboard" : "/supplier/dashboard"} replace />} />
     </Routes>
   );
 }

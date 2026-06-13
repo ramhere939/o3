@@ -150,7 +150,7 @@ export default function PriceIntelligence() {
                     domain={["dataMin - 5", "dataMax + 5"]}
                     tickFormatter={(v) => `₹${v}`} />
                   <Tooltip
-                    formatter={(v: number) => [`₹${v.toFixed(2)}`, "Price"]}
+                    formatter={(v: any) => [`₹${Number(v).toFixed(2)}`, "Price"]}
                     labelFormatter={(d) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "long" })}
                     contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e2e8f0" }}
                   />

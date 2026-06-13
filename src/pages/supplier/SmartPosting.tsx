@@ -52,7 +52,7 @@ export default function SmartPosting() {
         moqUnit: formData.unit,
         casNumber: formData.casNumber || "N/A",
         hsnCode: "382490", // Mock HSN code
-        tags: formData.features.join(', '), // Prisma expects string
+        tags: formData.features,
         description: formData.description || "No description provided",
         supplierId: "s1",
         supplierName: "O3 Mock Supplier",

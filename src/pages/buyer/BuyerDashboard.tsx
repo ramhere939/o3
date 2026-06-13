@@ -121,7 +121,7 @@ export default function BuyerDashboard() {
 
                 <div className="grid grid-cols-3 divide-x divide-slate-100 text-center mb-6">
                   <div>
-                    <p className="text-2xl font-bold text-slate-900">{stats?.unreadMessages ?? 0}</p>
+                    <p className="text-2xl font-bold text-slate-900">0</p>
                     <p className="text-xs text-slate-500 mt-1">Unread messages</p>
                   </div>
                   <div>
