@@ -14,6 +14,7 @@ const STATUS_FILTERS: { label: string; value: string }[] = [
   { label: "Sent", value: "sent" },
   { label: "Viewed", value: "viewed" },
   { label: "Quote Received", value: "quote_received" },
+  { label: "Accepted", value: "accepted" },
   { label: "Rejected", value: "rejected" },
   { label: "Expired", value: "expired" },
 ];
@@ -22,6 +23,7 @@ const TIMELINE_ICONS: Record<string, React.ElementType> = {
   sent: Clock,
   viewed: Eye,
   quote_received: CheckCircle,
+  accepted: CheckCircle,
   rejected: XCircle,
   expired: AlertCircle,
 };
@@ -29,6 +31,7 @@ const TIMELINE_COLORS: Record<string, string> = {
   sent: "text-blue-500 bg-blue-50 border-blue-200",
   viewed: "text-violet-500 bg-violet-50 border-violet-200",
   quote_received: "text-emerald-500 bg-emerald-50 border-emerald-200",
+  accepted: "text-emerald-500 bg-emerald-50 border-emerald-200",
   rejected: "text-red-500 bg-red-50 border-red-200",
   expired: "text-slate-400 bg-slate-50 border-slate-200",
 };
@@ -138,7 +141,7 @@ export default function RFQTracker() {
 
                   {/* Actions */}
                   <div className="flex flex-col items-end gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                    {(rfq.status === "quote_received" || rfq.status === "rejected") && (
+                    {(rfq.status === "quote_received" || rfq.status === "rejected" || rfq.status === "accepted") && (
                       <div className="flex flex-col gap-2 w-full">
                         <Link
                           to={`/buyer/quotes/compare?rfqId=${rfq.id}`}

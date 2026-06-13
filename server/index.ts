@@ -184,10 +184,10 @@ app.post('/api/quotes/:id/accept', async (req, res) => {
         data: { status: 'rejected' }
       });
       
-      // 3. Update the RFQ status to closed
+      // 3. Update the RFQ status to accepted
       const rfq = await tx.rFQ.update({
         where: { id: acceptedQuote.rfqId },
-        data: { status: 'closed' }
+        data: { status: 'accepted' }
       });
       
       // 4. Create an Order
