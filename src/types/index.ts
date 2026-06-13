@@ -84,7 +84,7 @@ export interface Buyer {
 
 // ─── RFQ ─────────────────────────────────────────────────────────────────────
 
-export type RFQStatus = 'draft' | 'sent' | 'viewed' | 'quote_received' | 'expired' | 'closed';
+export type RFQStatus = 'draft' | 'sent' | 'viewed' | 'quote_received' | 'expired' | 'closed' | 'rejected';
 
 export interface RFQ {
   id: string;

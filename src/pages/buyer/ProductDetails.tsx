@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
-import { Star, MessageSquare, Heart, Share2, Shield, ShieldCheck, ChevronRight, Package, PackageOpen, ThumbsUp, X, Paperclip, Zap, ChevronDown, CheckCircle2, Award, ArrowRight, Activity, Play, Smile, Image as ImageIcon, Folder, Phone, FileText, Languages, Users, Search } from "lucide-react";
+import { Star, MessageSquare, Heart, Share2, Shield, ShieldCheck, ChevronRight, Package, PackageOpen, ThumbsUp, X, Paperclip, Zap, ChevronDown, CheckCircle2, Award, ArrowRight, Activity, Play, Smile, Image as ImageIcon, Folder, Phone, FileText, Languages, Users, Search, AlertTriangle } from "lucide-react";
 import { PageHeader } from "@/components/shared/UIHelpers";
 import { useApp } from "@/context/AppContext";
 import { io } from "socket.io-client";
@@ -42,6 +42,8 @@ export default function ProductDetails() {
   const [inquiryMessage, setInquiryMessage] = useState("");
   const [selectedImageIdx, setSelectedImageIdx] = useState(0);
   const [showAltSuppliers, setShowAltSuppliers] = useState(false);
+  const [showSplitModal, setShowSplitModal] = useState(false);
+  const [splitAllocations, setSplitAllocations] = useState<Record<string, number>>({});
 
   useEffect(() => {
     // The scroll container in this layout is the <main> element, not the window!
@@ -102,6 +104,13 @@ export default function ProductDetails() {
     tags: activeProduct?.tags || "Titanium White, TiO2",
     description: activeProduct?.description || "High-quality industrial grade chemical suitable for various manufacturing applications.",
   };
+
+  const MOCK_AVAILABLE_STOCK = 1200;
+
+  const alternativeSellers = [
+    { id: "s2", name: "Global ChemCorp", loc: "Mumbai, India", price: product.priceTiers[0].price * 0.95, rating: 4.8 },
+    { id: "s3", name: "SinoChemicals Ltd", loc: "Shanghai, China", price: product.priceTiers[0].price * 0.88, rating: 4.6 },
+  ];
 
   const currentPrice = quantity >= 1200 ? product.priceTiers[2].price 
                      : quantity >= 500 ? product.priceTiers[1].price 
@@ -281,7 +290,7 @@ export default function ProductDetails() {
                 {/* Quantity */}
                 <div className="mb-8">
                   <h3 className="font-bold text-slate-900 mb-3">Quantity</h3>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 mb-2">
                     <div className="flex items-center border border-slate-300 rounded-lg h-10 w-32 bg-white overflow-hidden">
                       <button onClick={() => handleQuantityChange(-1)} className="flex-1 hover:bg-slate-100 text-slate-600 text-lg flex items-center justify-center transition-colors h-full">-</button>
                       <input 
@@ -298,6 +307,15 @@ export default function ProductDetails() {
                       </span>
                     )}
                   </div>
+                  {quantity > MOCK_AVAILABLE_STOCK && (
+                    <div className="flex items-start gap-1.5 text-amber-600 mt-2 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-xs font-bold">This supplier only has {MOCK_AVAILABLE_STOCK.toLocaleString()} units available.</p>
+                        <p className="text-xs mt-0.5">You can split your order with other suppliers to fulfill your total requirement.</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Customization */}
@@ -445,7 +463,22 @@ export default function ProductDetails() {
 
               <button 
                 onClick={() => {
-                  if (quantity > 0) {
+                  if (quantity > MOCK_AVAILABLE_STOCK) {
+                    setShowSplitModal(true);
+                    // auto-allocate remaining logic setup
+                    let remaining = quantity - MOCK_AVAILABLE_STOCK;
+                    const initialAlloc: Record<string, number> = {};
+                    alternativeSellers.forEach(s => {
+                      if (remaining > 0) {
+                        const alloc = Math.min(remaining, 1000); // assume max 1000 per alt supplier
+                        initialAlloc[s.id] = alloc;
+                        remaining -= alloc;
+                      } else {
+                        initialAlloc[s.id] = 0;
+                      }
+                    });
+                    setSplitAllocations(initialAlloc);
+                  } else if (quantity > 0) {
                     const saved = localStorage.getItem("o3_buyer_cart");
                     const cart = saved ? JSON.parse(saved) : [];
                     const newItem = {
@@ -460,8 +493,7 @@ export default function ProductDetails() {
                       image: product.images[0]
                     };
                     
-                    // check if item already in cart
-                    const existingIdx = cart.findIndex((x: any) => x.product === newItem.product);
+                    const existingIdx = cart.findIndex((x: any) => x.product === newItem.product && x.supplier === newItem.supplier);
                     if (existingIdx >= 0) {
                       cart[existingIdx].quantity += quantity;
                       cart[existingIdx].total += subtotal;
@@ -476,9 +508,13 @@ export default function ProductDetails() {
                     alert("Please select a quantity first");
                   }
                 }}
-                className="w-full text-indigo-600 hover:text-indigo-700 font-bold py-2 text-sm transition-colors mt-1"
+                className={`w-full font-bold py-2 text-sm transition-colors mt-1 rounded-full ${
+                  quantity > MOCK_AVAILABLE_STOCK 
+                    ? "bg-amber-100 text-amber-700 hover:bg-amber-200 border border-amber-300" 
+                    : "text-indigo-600 hover:text-indigo-700"
+                }`}
               >
-                Add to cart
+                {quantity > MOCK_AVAILABLE_STOCK ? "Split Order to Cart" : "Add to cart"}
               </button>
             </div>
           </div>
@@ -631,6 +667,182 @@ export default function ProductDetails() {
           currentSupplier={product.supplierName}
           onClose={() => setShowAltSuppliers(false)}
         />
+      )}
+
+      {/* Split Order Modal */}
+      {showSplitModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col">
+            <div className="flex justify-between items-center p-5 border-b border-slate-200 bg-slate-50">
+              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <Users className="w-5 h-5 text-indigo-600" />
+                Split Your Order
+              </h2>
+              <button onClick={() => setShowSplitModal(false)} className="text-slate-400 hover:text-slate-600 bg-white rounded-full p-1 shadow-sm">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 bg-white overflow-y-auto max-h-[70vh]">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
+                <div>
+                  <h3 className="font-bold text-amber-900 text-sm mb-1">Insufficient stock from primary supplier</h3>
+                  <p className="text-sm text-amber-700">
+                    You requested <strong>{quantity.toLocaleString()}</strong> units, but <strong>{product.supplierName}</strong> only has <strong>{MOCK_AVAILABLE_STOCK.toLocaleString()}</strong> units in stock. 
+                    You can fulfill your remaining deficit (<strong>{(quantity - MOCK_AVAILABLE_STOCK).toLocaleString()}</strong> units) by purchasing from alternative verified suppliers below.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="font-bold text-slate-900">Order Allocation</h3>
+                
+                {/* Primary Supplier Allocation */}
+                <div className="border border-indigo-200 bg-indigo-50/50 rounded-xl p-4 flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-bold text-slate-900">{product.supplierName}</span>
+                      <span className="bg-indigo-100 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Primary</span>
+                    </div>
+                    <p className="text-sm text-slate-600">₹{currentPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })} / unit</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-slate-500 mb-1">Allocated Stock</p>
+                    <p className="font-bold text-indigo-700 text-lg">{MOCK_AVAILABLE_STOCK.toLocaleString()}</p>
+                  </div>
+                </div>
+
+                {/* Alternative Suppliers Allocation */}
+                {alternativeSellers.map(seller => (
+                  <div key={seller.id} className="border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between hover:border-indigo-300 transition-colors">
+                    <div>
+                      <h4 className="font-bold text-slate-900">{seller.name}</h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-sm text-emerald-600 font-bold">₹{seller.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                        <span className="text-xs text-slate-400 line-through">₹{currentPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                      </div>
+                      <div className="flex items-center gap-1 mt-1.5 text-xs text-amber-500">
+                        <Star className="w-3 h-3 fill-amber-500" />
+                        <span className="font-medium text-slate-700">{seller.rating} Rating</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                      <span className="text-sm font-medium text-slate-600">Qty:</span>
+                      <input 
+                        type="number" 
+                        min="0"
+                        value={splitAllocations[seller.id] || 0}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 0;
+                          setSplitAllocations(prev => ({ ...prev, [seller.id]: val }));
+                        }}
+                        className="w-24 px-3 py-1.5 rounded-lg border border-slate-300 text-sm font-bold text-center focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Validation Summary */}
+              {(() => {
+                const totalAllocated = MOCK_AVAILABLE_STOCK + Object.values(splitAllocations).reduce((a, b) => a + b, 0);
+                const isMatched = totalAllocated === quantity;
+                return (
+                  <div className={`mt-6 p-4 rounded-xl border flex items-center justify-between ${
+                    isMatched ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-slate-50 border-slate-200 text-slate-700'
+                  }`}>
+                    <div>
+                      <p className="text-sm font-medium">Total Allocated: <strong>{totalAllocated.toLocaleString()}</strong> / {quantity.toLocaleString()}</p>
+                      {!isMatched && (
+                        <p className="text-xs text-rose-500 font-medium mt-1">
+                          You still need to allocate {Math.abs(quantity - totalAllocated).toLocaleString()} units.
+                        </p>
+                      )}
+                    </div>
+                    {isMatched && <CheckCircle2 className="w-6 h-6 text-emerald-500" />}
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="p-5 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
+              <button 
+                onClick={() => setShowSplitModal(false)}
+                className="px-6 py-2.5 rounded-lg font-bold text-slate-600 hover:bg-slate-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                  const totalAllocated = MOCK_AVAILABLE_STOCK + Object.values(splitAllocations).reduce((a, b) => a + b, 0);
+                  if (totalAllocated !== quantity) {
+                    alert(`Please allocate exactly ${quantity} units. Currently allocated: ${totalAllocated}`);
+                    return;
+                  }
+
+                  const saved = localStorage.getItem("o3_buyer_cart");
+                  const cart = saved ? JSON.parse(saved) : [];
+                  
+                  // Helper to add item
+                  const addOrUpdateCart = (item: any) => {
+                    const existingIdx = cart.findIndex((x: any) => x.product === item.product && x.supplier === item.supplier);
+                    if (existingIdx >= 0) {
+                      cart[existingIdx].quantity += item.quantity;
+                      cart[existingIdx].total += item.total;
+                    } else {
+                      cart.push(item);
+                    }
+                  };
+
+                  // 1. Add primary supplier
+                  addOrUpdateCart({
+                    id: Date.now() + Math.random(),
+                    supplier: product.supplierName,
+                    product: product.title,
+                    cas: "13463-67-7",
+                    price: currentPrice,
+                    quantity: MOCK_AVAILABLE_STOCK,
+                    unit: "piece",
+                    total: MOCK_AVAILABLE_STOCK * currentPrice,
+                    image: product.images[0]
+                  });
+
+                  // 2. Add alternative suppliers
+                  alternativeSellers.forEach(seller => {
+                    const alloc = splitAllocations[seller.id] || 0;
+                    if (alloc > 0) {
+                      addOrUpdateCart({
+                        id: Date.now() + Math.random(),
+                        supplier: seller.name,
+                        product: product.title,
+                        cas: "13463-67-7",
+                        price: seller.price,
+                        quantity: alloc,
+                        unit: "piece",
+                        total: alloc * seller.price,
+                        image: product.images[0]
+                      });
+                    }
+                  });
+
+                  localStorage.setItem("o3_buyer_cart", JSON.stringify(cart));
+                  window.dispatchEvent(new Event("cartUpdated"));
+                  setShowSplitModal(false);
+                  
+                  // Reset quantity to 0
+                  setQuantity(0);
+                  alert("Split order added to cart successfully!");
+                  navigate("/buyer/cart");
+                }}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-8 rounded-lg transition-colors shadow-sm"
+              >
+                Confirm & Add to Cart
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>
