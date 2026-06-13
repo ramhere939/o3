@@ -99,7 +99,8 @@ export default function ProductDetails() {
     category: activeProduct?.category || "Pigments",
     casNumber: activeProduct?.casNumber || "13463-67-7",
     grade: activeProduct?.grade || "Industrial Grade",
-    tags: activeProduct?.tags || [],
+    tags: activeProduct?.tags || "Titanium White, TiO2",
+    description: activeProduct?.description || "High-quality industrial grade chemical suitable for various manufacturing applications.",
   };
 
   const currentPrice = quantity >= 1200 ? product.priceTiers[2].price 
@@ -261,7 +262,7 @@ export default function ProductDetails() {
                   <span className="text-slate-600">{product.sold} sold</span>
                   <span className="text-slate-300">|</span>
                   <span className="text-indigo-600 font-medium flex items-center gap-1">
-                    🏆 #6 most popular in Pigments
+                    🏆 #6 most popular in {product.category}
                   </span>
                 </div>
 
@@ -314,6 +315,14 @@ export default function ProductDetails() {
             </div>
           </div>
 
+          {/* Description Section */}
+          <div className="p-6 lg:p-8 border-b border-slate-200 bg-white">
+            <h2 className="text-xl font-bold text-slate-900 mb-4">Product Description</h2>
+            <p className="text-slate-700 leading-relaxed text-sm">
+              {product.description}
+            </p>
+          </div>
+
           {/* Key Attributes Section */}
           <div className="p-6 lg:p-8 border-b border-slate-200 bg-[#f9fafb]">
             <h2 className="text-xl font-bold text-slate-900 mb-6">Key attributes</h2>
@@ -331,24 +340,12 @@ export default function ProductDetails() {
                 <span className="col-span-2 text-slate-900 text-sm font-medium">{product.category}</span>
               </div>
               <div className="grid grid-cols-3 border-b border-slate-200 pb-3">
-                <span className="text-slate-500 text-sm">EINECS No.</span>
-                <span className="col-span-2 text-slate-900 text-sm font-medium">236-675-5</span>
-              </div>
-              <div className="grid grid-cols-3 border-b border-slate-200 pb-3">
                 <span className="text-slate-500 text-sm">Place of Origin</span>
                 <span className="col-span-2 text-slate-900 text-sm font-medium">{product.location}</span>
               </div>
               <div className="grid grid-cols-3 border-b border-slate-200 pb-3">
                 <span className="text-slate-500 text-sm">Grade Standard</span>
                 <span className="col-span-2 text-slate-900 text-sm font-medium">{product.grade}</span>
-              </div>
-              <div className="grid grid-cols-3 border-b border-slate-200 pb-3">
-                <span className="text-slate-500 text-sm">Purity</span>
-                <span className="col-span-2 text-slate-900 text-sm font-medium">93% min</span>
-              </div>
-              <div className="grid grid-cols-3 border-b border-slate-200 pb-3">
-                <span className="text-slate-500 text-sm">Appearance</span>
-                <span className="col-span-2 text-slate-900 text-sm font-medium">Standard</span>
               </div>
             </div>
           </div>
@@ -357,7 +354,6 @@ export default function ProductDetails() {
           <div className="p-6 lg:p-8" id="reviews">
             <div className="flex items-center gap-4 mb-8">
               <h2 className="text-xl font-bold text-slate-900">Reviews ({product.reviews})</h2>
-              <span className="text-sm text-indigo-600 hover:underline cursor-pointer">Showing all reviews in your chosen language</span>
             </div>
 
             <div className="space-y-8">

@@ -147,7 +147,11 @@ export default function ShipmentTracking() {
                             transition={{ delay: i * 0.1 }}
                             className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                               isCompleted
-                                ? "bg-emerald-500 text-white"
+                                ? event.status === "delivered" ? "bg-emerald-500 text-white" :
+                                  event.status === "in_transit" ? "bg-amber-500 text-white" :
+                                  event.status === "dispatched" ? "bg-purple-500 text-white" :
+                                  event.status === "invoice_generated" ? "bg-blue-500 text-white" :
+                                  "bg-indigo-500 text-white"
                                 : i === selectedOrder.shipmentEvents.filter((e) => e.completed).length
                                 ? "bg-indigo-100 border-2 border-indigo-400 text-indigo-600 animate-pulse"
                                 : "bg-slate-100 text-slate-300"
@@ -160,7 +164,15 @@ export default function ShipmentTracking() {
                             )}
                           </motion.div>
                           {!isLast && (
-                            <div className={`w-0.5 flex-1 my-1 ${isCompleted ? "bg-emerald-300" : "bg-slate-200"}`}
+                            <div className={`w-0.5 flex-1 my-1 ${
+                              isCompleted
+                                ? event.status === "delivered" ? "bg-emerald-300" :
+                                  event.status === "in_transit" ? "bg-amber-300" :
+                                  event.status === "dispatched" ? "bg-purple-300" :
+                                  event.status === "invoice_generated" ? "bg-blue-300" :
+                                  "bg-indigo-300"
+                                : "bg-slate-200"
+                            }`}
                               style={{ minHeight: 32 }} />
                           )}
                         </div>

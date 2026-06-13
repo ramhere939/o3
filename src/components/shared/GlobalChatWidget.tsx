@@ -216,7 +216,7 @@ export function GlobalChatWidget() {
                   )}
                 </div>
               </div>
-              <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-white/20 rounded-full transition-colors">
+              <button onClick={() => { setIsOpen(false); setActiveQuoteId(null); }} className="p-1 hover:bg-white/20 rounded-full transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>

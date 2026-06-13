@@ -8,7 +8,6 @@ import { getDocuments, uploadDocument } from "@/lib/mock-api";
 const DOC_TYPES = ["All", "COA", "TDS", "PO", "Invoice", "Eway Bill", "SDS/MSDS", "Legal"];
 
 const TYPE_COLORS: Record<string, string> = {
-  KYC: "bg-emerald-100 text-emerald-700",
   COA: "bg-blue-100 text-blue-700",
   TDS: "bg-violet-100 text-violet-700",
   PO: "bg-indigo-100 text-indigo-700",
@@ -40,7 +39,7 @@ export default function DocumentsVault() {
     if (file) {
       uploadMutation.mutate({
         name: file.name,
-        type: "KYC",
+        type: "Legal",
         size: `${Math.max(1, Math.round(file.size / 1024))} KB`,
         format: file.name.split(".").pop()?.toUpperCase() || "DOC",
         status: "active",

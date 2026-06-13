@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { Sparkles, Search, Star, Clock, MapPin, Shield, ArrowRight, Loader2, Paperclip, Mic, MicOff, X } from "lucide-react";
 import { aiSearch } from "@/lib/mock-api";
 import { formatCurrency } from "@/lib/utils";
@@ -236,9 +236,12 @@ export default function AISearchHub({ embedded = false }: { embedded?: boolean }
                     <span className="text-xs text-slate-500">{result.location}</span>
                   </div>
 
-                  <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2 rounded-lg transition-colors flex items-center justify-center gap-2">
+                  <Link 
+                    to={`/buyer/rfq/create?product=${encodeURIComponent(result.product)}`}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
                     Request Quote <ArrowRight className="w-4 h-4" />
-                  </button>
+                  </Link>
                 </motion.div>
               ))}
             </div>
