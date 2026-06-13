@@ -64,7 +64,7 @@ export default function QuoteNegotiate() {
     if (!activeQuoteId) return;
 
     // Fetch message history
-    fetch(`/api/quotes/${activeQuoteId}/messages`)
+    fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001"}/api/quotes/${activeQuoteId}/messages`)
       .then(res => res.json())
       .then(data => {
         if(Array.isArray(data)) {

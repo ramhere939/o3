@@ -138,6 +138,18 @@ app.post('/api/quotes', async (req, res) => {
   res.json(newQuote);
 });
 
+app.get('/api/quotes/:id/messages', async (req, res) => {
+  try {
+    const messages = await prisma.message.findMany({
+      where: { quoteId: req.params.id },
+      orderBy: { timestamp: 'asc' }
+    });
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
 app.patch('/api/quotes/:id', async (req, res) => {
   const { status } = req.body;
   const updatedQuote = await prisma.quote.update({

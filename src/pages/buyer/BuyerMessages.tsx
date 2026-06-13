@@ -54,7 +54,7 @@ export default function BuyerMessages() {
   useEffect(() => {
     if (!selectedChat) return;
     
-    fetch(`/api/quotes/${selectedChat}/messages`)
+    fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001"}/api/quotes/${selectedChat}/messages`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {

@@ -230,7 +230,7 @@ export function RFQDetailModal({
 
   const rejectMutation = useMutation({
     mutationFn: async (quoteId: string) => {
-      const res = await fetch(`/api/quotes/${quoteId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001"}/api/quotes/${quoteId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "rejected" }),

@@ -36,7 +36,7 @@ export function GlobalChatWidget() {
 
     // Pre-fetch message history for all active quotes so the UI is instantly ready
     quotes.forEach(quote => {
-      fetch(`/api/quotes/${quote.id}/messages`)
+      fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001"}/api/quotes/${quote.id}/messages`)
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data) && data.length > 0) {
@@ -118,7 +118,7 @@ export function GlobalChatWidget() {
       socket.emit("join_quote_room", activeQuoteId);
     }
 
-    fetch(`/api/quotes/${activeQuoteId}/messages`)
+    fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001"}/api/quotes/${activeQuoteId}/messages`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
