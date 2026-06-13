@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Clock, ArrowRight, Package } from "lucide-react";
-import { getRFQs } from "@/lib/mock-api";
+import { getRFQs, getQuotes } from "@/lib/mock-api";
 import { formatDate, formatRelativeTime } from "@/lib/utils";
 import { StatusChip } from "@/components/shared/StatusChip";
 import { PageHeader, EmptyState, TableSkeleton } from "@/components/shared/UIHelpers";
@@ -13,20 +13,42 @@ export default function RFQInbox() {
   const [filter, setFilter] = useState("");
   const [selectedRFQId, setSelectedRFQId] = useState<string | null>(null);
 
-  const { data: rfqs, isLoading } = useQuery({
-    queryKey: ["rfqs-inbox", filter],
-    queryFn: () => getRFQs({ status: filter || undefined }),
+  const { data: rfqs, isLoading: rfqsLoading } = useQuery({
+    queryKey: ["rfqs-inbox"],
+    queryFn: () => getRFQs(),
     refetchInterval: 5000,
   });
 
-  const openRFQs = rfqs?.filter((r) => r.status === "sent" || r.status === "viewed") || [];
-  const displayRFQs = filter ? rfqs : openRFQs;
+  const { data: quotes, isLoading: quotesLoading } = useQuery({
+    queryKey: ["supplier-quotes", "s1"],
+    queryFn: () => getQuotes({ supplierId: "s1" }),
+    refetchInterval: 5000,
+  });
+
+  const isLoading = rfqsLoading || quotesLoading;
+
+  const displayRFQs = rfqs?.filter((rfq) => {
+    const hasQuoted = quotes?.some(q => q.rfqId === rfq.id);
+    
+    if (filter === "quote_received") return hasQuoted;
+    if (filter === "expired") return rfq.status === "expired";
+    
+    if (hasQuoted) return false;
+
+    if (filter === "") return rfq.status !== "expired";
+    if (filter === "sent") return rfq.status === "sent" || rfq.status === "open";
+    if (filter === "viewed") return rfq.status === "viewed";
+    
+    return true;
+  }) || [];
+
+  const openRFQsCount = rfqs?.filter(r => r.status !== "expired" && !quotes?.some(q => q.rfqId === r.id)).length || 0;
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="RFQ Inbox"
-        subtitle={`${openRFQs.length} new RFQs awaiting your quote`}
+        subtitle={`${openRFQsCount} new RFQs awaiting your quote`}
         breadcrumb={["Supplier Portal", "RFQ Inbox"]}
       />
 
@@ -84,7 +106,7 @@ export default function RFQInbox() {
                         <h3 className="text-sm font-semibold text-slate-900 group-hover:text-indigo-700 transition-colors">
                           {rfq.productName}
                         </h3>
-                        <StatusChip status={rfq.status} role="supplier" />
+                        <StatusChip status={quotes?.some(q => q.rfqId === rfq.id) ? "quote_received" : rfq.status} role="supplier" />
                       </div>
                       <p className="text-xs text-slate-400 mt-0.5">
                         {rfq.rfqNumber} · {rfq.grade}
@@ -123,7 +145,7 @@ export default function RFQInbox() {
                   className="flex-shrink-0 flex flex-col items-end gap-1.5"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {(rfq.status as string) === 'quote_received' || (rfq.status as string) === 'negotiating' ? (
+                  {quotes?.some(q => q.rfqId === rfq.id) ? (
                     <div className="flex flex-col gap-1.5 w-full">
                       <Link
                         to={`/supplier/quotes/negotiate?rfqId=${rfq.id}`}

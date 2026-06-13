@@ -35,8 +35,8 @@ export default function SupplierQuoteNegotiate() {
   });
 
   const { data: quotes, isLoading: quotesLoading } = useQuery({
-    queryKey: ["quotes", rfqId],
-    queryFn: () => getQuotes({ rfqId }),
+    queryKey: ["quotes", rfqId, "s1"],
+    queryFn: () => getQuotes({ rfqId, supplierId: "s1" }),
     enabled: !!rfqId,
   });
 

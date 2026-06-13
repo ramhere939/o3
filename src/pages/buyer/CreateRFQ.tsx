@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { CheckCircle, ArrowLeft, FlaskConical, Paperclip, X, Mic, MicOff } from "lucide-react";
+import { CheckCircle, ArrowLeft, FlaskConical, Paperclip, X, Mic, MicOff, Sparkles, Users, ShieldCheck, MapPin, ArrowRight } from "lucide-react";
 import { rfqSchema, type RFQInput } from "@/lib/validations";
 import { PageHeader, SectionCard } from "@/components/shared/UIHelpers";
 import { createRFQ, parseRfqText } from "@/lib/mock-api";
@@ -17,6 +17,10 @@ export default function CreateRFQ() {
   const [isParsing, setIsParsing] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectionStep, setSelectionStep] = useState<"form" | "matching" | "manual-select" | "matched">("form");
+  const [rfqData, setRfqData] = useState<RFQInput | null>(null);
+  const [isSubmittingFinal, setIsSubmittingFinal] = useState(false);
+  const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
@@ -32,16 +36,32 @@ export default function CreateRFQ() {
   });
 
   const onSubmit = async (data: RFQInput) => {
+    setRfqData(data);
+    if (data.dispatchMethod === "auto") {
+      setSelectionStep("matching");
+      setTimeout(() => {
+        setSelectionStep("matched");
+      }, 2500);
+    } else {
+      setSelectionStep("manual-select");
+    }
+  };
+
+  const handleFinalSubmit = async () => {
+    if (!rfqData) return;
+    setIsSubmittingFinal(true);
     // We mock the buyerId and buyerName since we don't have real auth state attached to this form right now
     await createRFQ({
-      ...data,
+      ...rfqData,
       buyerId: "b1",
       buyerName: "O3 Demo Buyer",
-      casNumber: data.casNumber || "",
-      notes: data.notes || "",
+      casNumber: rfqData.casNumber || "",
+      notes: rfqData.notes || "",
     });
     queryClient.invalidateQueries({ queryKey: ["rfqs"] });
     queryClient.invalidateQueries({ queryKey: ["open-rfqs"] });
+    setIsSubmittingFinal(false);
+    setSelectionStep("form");
     setSubmitted(true);
   };
 
@@ -132,6 +152,118 @@ export default function CreateRFQ() {
               Create Another
             </button>
           </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (selectionStep !== "form") {
+    const isMatching = selectionStep === "matching";
+    const isManual = selectionStep === "manual-select";
+    
+    // Mock suppliers
+    const mockSuppliers = [
+      { id: "s1", name: "ChemCorp Global", match: "98%", verified: true, location: "India" },
+      { id: "s2", name: "SinoChemicals Ltd", match: "95%", verified: true, location: "China" },
+      { id: "s3", name: "EuroSynthetics", match: "91%", verified: true, location: "Germany" },
+      { id: "s4", name: "Alpha Organics", match: "88%", verified: true, location: "India" },
+      { id: "s5", name: "Pacific Chemicals", match: "85%", verified: false, location: "Vietnam" },
+    ];
+    
+    const displaySuppliers = isManual ? mockSuppliers : mockSuppliers.slice(0, 3);
+
+    return (
+      <div className="max-w-2xl mx-auto">
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="bg-white rounded-2xl border border-slate-200 shadow-lg p-8"
+        >
+          {isMatching ? (
+            <div className="text-center py-12">
+              <div className="relative w-20 h-20 mx-auto mb-6">
+                <div className="absolute inset-0 border-4 border-indigo-100 rounded-full"></div>
+                <div className="absolute inset-0 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
+                <Sparkles className="absolute inset-0 m-auto w-8 h-8 text-indigo-600 animate-pulse" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">AI is finding the best suppliers...</h2>
+              <p className="text-slate-500">Scanning 2,000+ verified suppliers for exact matches based on your product, quantity, and location.</p>
+            </div>
+          ) : (
+            <div>
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  {isManual ? <Users className="w-8 h-8 text-indigo-600" /> : <Sparkles className="w-8 h-8 text-indigo-600" />}
+                </div>
+                <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                  {isManual ? "Select Suppliers" : "AI Found 3 Perfect Matches"}
+                </h2>
+                <p className="text-slate-500">
+                  {isManual 
+                    ? "Choose which suppliers you want to send this RFQ to." 
+                    : "Based on your requirements, these verified suppliers have the highest success rates."}
+                </p>
+              </div>
+
+              <div className="space-y-3 mb-8 max-h-[400px] overflow-y-auto pr-2">
+                {displaySuppliers.map((s) => (
+                  <div key={s.id} className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-indigo-300 transition-colors bg-slate-50">
+                    {isManual && (
+                      <input 
+                        type="checkbox" 
+                        checked={selectedSuppliers.includes(s.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) setSelectedSuppliers([...selectedSuppliers, s.id]);
+                          else setSelectedSuppliers(selectedSuppliers.filter(id => id !== s.id));
+                        }}
+                        className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                      />
+                    )}
+                    {!isManual && (
+                      <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="w-5 h-5 text-emerald-600" />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                        {s.name}
+                        {s.verified && <ShieldCheck className="w-4 h-4 text-emerald-500" />}
+                      </h4>
+                      <p className="text-xs text-slate-500 flex items-center gap-2 mt-1">
+                        <MapPin className="w-3 h-3" /> {s.location}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="inline-block px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg mb-1">
+                        {s.match} Match
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setSelectionStep("form")}
+                  className="px-6 py-3 border border-slate-200 text-slate-600 rounded-xl font-medium hover:bg-slate-50"
+                  disabled={isSubmittingFinal}
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handleFinalSubmit}
+                  disabled={isSubmittingFinal || (isManual && selectedSuppliers.length === 0)}
+                  className="flex-1 bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 disabled:bg-slate-300 disabled:cursor-not-allowed"
+                >
+                  {isSubmittingFinal ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>Send RFQ to {isManual ? selectedSuppliers.length : 3} Suppliers <ArrowRight className="w-4 h-4" /></>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
         </motion.div>
       </div>
     );

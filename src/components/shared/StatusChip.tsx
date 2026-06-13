@@ -19,8 +19,12 @@ export function StatusChip({ status, className, role }: StatusChipProps) {
   const colorKey = getStatusColor(status);
   let label = getStatusLabel(status);
   
-  if (role === "supplier" && status === "quote_received") {
-    label = "Quote Sent";
+  if (role === "supplier") {
+    if (status === "quote_received") {
+      label = "Quote Sent";
+    } else if (status === "sent" || status === "open") {
+      label = "New";
+    }
   }
 
   return (

@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
-import { Star, MessageSquare, Heart, Share2, Shield, ShieldCheck, ChevronRight, Package, PackageOpen, ThumbsUp, X, Paperclip, Zap, ChevronDown, CheckCircle2, Award, ArrowRight, Activity, Play, Smile, Image as ImageIcon, Folder, Phone, FileText, Languages, Users, Search, AlertTriangle } from "lucide-react";
+import { Star, MessageSquare, Heart, Share2, Shield, ShieldCheck, ChevronRight, Package, PackageOpen, ThumbsUp, X, Paperclip, Zap, ChevronDown, CheckCircle2, Award, ArrowRight, Activity, Play, Smile, Image as ImageIcon, Folder, Phone, FileText, Languages, Users, Search, AlertTriangle, Sparkles } from "lucide-react";
 import { PageHeader } from "@/components/shared/UIHelpers";
 import { useApp } from "@/context/AppContext";
 import { io } from "socket.io-client";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { getProductById } from "@/lib/mock-api";
-import { AlternativeSuppliersModal } from "@/components/shared/AlternativeSuppliersModal";
+
 
 const MOCK_REVIEWS = [
   {
@@ -41,7 +41,6 @@ export default function ProductDetails() {
   const [showInquiryModal, setShowInquiryModal] = useState(false);
   const [inquiryMessage, setInquiryMessage] = useState("");
   const [selectedImageIdx, setSelectedImageIdx] = useState(0);
-  const [showAltSuppliers, setShowAltSuppliers] = useState(false);
   const [showSplitModal, setShowSplitModal] = useState(false);
   const [splitAllocations, setSplitAllocations] = useState<Record<string, number>>({});
 
@@ -199,13 +198,6 @@ export default function ProductDetails() {
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     <span className="text-blue-600 text-xs font-bold px-2 py-1 bg-blue-100 rounded">Verified</span>
-                    <button
-                      onClick={() => setShowAltSuppliers(true)}
-                      className="text-xs text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
-                    >
-                      <Search className="w-3 h-3" />
-                      Alternative Suppliers
-                    </button>
                   </div>
                 </div>
               </div>
@@ -533,13 +525,19 @@ export default function ProductDetails() {
             </div>
             
             <div className="p-6 bg-[#f8f9fa] flex-1 overflow-y-auto">
-              <div className="bg-white rounded-lg border border-slate-200 p-4 shadow-sm mb-4">
+              <div className="bg-white rounded-lg border border-slate-200 p-4 shadow-sm mb-4 relative">
                 <textarea
                   className="w-full h-32 resize-none border-0 focus:ring-0 p-0 text-sm text-slate-700 bg-transparent"
                   placeholder="Enter your inquiry details..."
                   value={inquiryMessage}
                   onChange={(e) => setInquiryMessage(e.target.value)}
                 ></textarea>
+                <button 
+                  onClick={() => setInquiryMessage(`Hi, I'm interested in purchasing ${product.title}. Can you provide your best price for ${quantity || 'a bulk order'} delivered to my location? Also, please share technical specifications, MSDS, and warranty terms.`)} 
+                  className="absolute bottom-3 right-3 text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-bold transition-colors"
+                >
+                  <Sparkles className="w-3.5 h-3.5" /> Auto-Write with AI
+                </button>
                 
                 <div className="mt-4">
                   <div className="flex items-center gap-2 mb-3">
@@ -581,92 +579,137 @@ export default function ProductDetails() {
               </div>
             </div>
 
-            <div className="p-4 bg-white border-t border-slate-200 flex justify-center">
+            <div className="p-4 bg-white border-t border-slate-200 flex flex-col items-center gap-3">
               <button 
                 onClick={async () => {
-                  if (inquiryMessage.trim()) {
-                    try {
-                      // 1. Create an RFQ for the inquiry
-                      const rfqRes = await fetch("http://localhost:3001/api/rfqs", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          buyerId: user.id || "b1",
-                          buyerName: user.name || "Buyer",
-                          productName: product.title,
-                          quantity: quantity || 1,
-                          quantityUnit: "piece",
-                          deliveryDate: new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0],
-                          deliveryLocation: "Default",
-                          paymentTerms: "Standard"
-                        })
-                      });
-                      const rfq = await rfqRes.json();
+                  let finalMessage = inquiryMessage.trim();
+                  if (!finalMessage) {
+                    finalMessage = `Hi, I'm interested in purchasing ${product.title}. Can you provide your best price for ${quantity || 'a bulk order'} delivered to my location? Also, please share technical specifications, MSDS, and warranty terms.`;
+                  }
+                  try {
+                    // 1. Create an RFQ for the inquiry
+                    const rfqRes = await fetch("http://localhost:3001/api/rfqs", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        buyerId: user?.id || "b1",
+                        buyerName: user?.name || "Buyer",
+                        productName: product.title,
+                        quantity: quantity || 1,
+                        quantityUnit: "piece",
+                        deliveryDate: new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0],
+                        deliveryLocation: "Default",
+                        paymentTerms: "Standard"
+                      })
+                    });
+                    const rfq = await rfqRes.json();
 
-                      // 2. Create a Quote room to chat in
-                      const quoteRes = await fetch("http://localhost:3001/api/quotes", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          rfqId: rfq.id,
-                          supplierId: "s1", // The mock supplier ID
-                          supplierName: product.supplierName,
-                          price: currentPrice || 0,
-                          priceUnit: "INR",
-                          totalAmount: subtotal || 0,
-                          quantity: quantity || 1,
-                          quantityUnit: "piece",
-                          leadTimeDays: 7,
-                          paymentTerms: "Standard",
-                          logisticsTerms: "Standard",
-                          validityDays: 7,
-                          validUntil: new Date(Date.now() + 7*24*60*60*1000).toISOString()
-                        })
-                      });
-                      const quote = await quoteRes.json();
+                    // 2. Create a Quote room to chat in
+                    const quoteRes = await fetch("http://localhost:3001/api/quotes", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        rfqId: rfq.id,
+                        supplierId: "s1", // The mock supplier ID
+                        supplierName: product.supplierName,
+                        price: currentPrice || 0,
+                        priceUnit: "INR",
+                        totalAmount: subtotal || 0,
+                        quantity: quantity || 1,
+                        quantityUnit: "piece",
+                        leadTimeDays: 7,
+                        paymentTerms: "Standard",
+                        logisticsTerms: "Standard",
+                        validityDays: 7,
+                        validUntil: new Date(Date.now() + 7*24*60*60*1000).toISOString()
+                      })
+                    });
+                    const quote = await quoteRes.json();
 
-                      // 3. Send initial message via socket
-                      const socket = io("http://localhost:3001");
-                      socket.emit("send_message", {
-                        quoteId: quote.id,
-                        sender: "buyer",
-                        text: `[INQUIRY for ${product.title}]\n\n${inquiryMessage}`
-                      });
+                    // 3. Send initial message via socket
+                    const socket = io("http://localhost:3001");
+                    socket.emit("send_message", {
+                      quoteId: quote.id,
+                      sender: "buyer",
+                      text: `[INQUIRY for ${product.title}]\n\n${finalMessage}`
+                    });
 
-                      alert("Inquiry sent successfully! You can track this in your Messages.");
-                      setShowInquiryModal(false);
-                      setInquiryMessage("");
-                      
-                      // Invalidate quotes so GlobalChatWidget fetches the new quote
-                      await queryClient.invalidateQueries({ queryKey: ["quotes"] });
+                    alert("Inquiry sent successfully! You can track this in your Messages.");
+                    setShowInquiryModal(false);
+                    setInquiryMessage("");
+                    
+                    // Invalidate quotes so GlobalChatWidget fetches the new quote
+                    await queryClient.invalidateQueries({ queryKey: ["quotes"] });
 
-                      // Immediately open the chat widget to this new inquiry
-                      window.dispatchEvent(new CustomEvent("openChat", { detail: quote.id }));
-                      
-                    } catch (error) {
-                      console.error("Failed to send inquiry:", error);
-                      alert("Failed to send inquiry.");
-                    }
-                  } else {
-                    alert("Please enter an inquiry message first.");
+                    // Immediately open the chat widget to this new inquiry
+                    window.dispatchEvent(new CustomEvent("openChat", { detail: quote.id }));
+                    
+                  } catch (error) {
+                    console.error("Failed to send inquiry:", error);
+                    alert("Failed to send inquiry.");
                   }
                 }}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-8 rounded-full transition-colors"
+                className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold py-3 px-10 rounded-full transition-all shadow-lg shadow-indigo-500/30 flex items-center gap-2 w-full max-w-sm justify-center"
               >
-                Send inquiry
+                <Sparkles className="w-4 h-4 text-indigo-100" />
+                Send Inquiry with AI
+              </button>
+              
+              <button 
+                onClick={async () => {
+                  try {
+                    // Create an empty RFQ/Quote and open chat without sending message
+                    const rfqRes = await fetch("http://localhost:3001/api/rfqs", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        buyerId: user?.id || "b1",
+                        buyerName: user?.name || "Buyer",
+                        productName: product.title,
+                        quantity: quantity || 1,
+                        quantityUnit: "piece",
+                        deliveryDate: new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0],
+                        deliveryLocation: "Default",
+                        paymentTerms: "Standard"
+                      })
+                    });
+                    const rfq = await rfqRes.json();
+
+                    const quoteRes = await fetch("http://localhost:3001/api/quotes", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        rfqId: rfq.id,
+                        supplierId: "s1",
+                        supplierName: product.supplierName,
+                        price: currentPrice || 0,
+                        priceUnit: "INR",
+                        totalAmount: subtotal || 0,
+                        quantity: quantity || 1,
+                        quantityUnit: "piece",
+                        leadTimeDays: 7,
+                        paymentTerms: "Standard",
+                        logisticsTerms: "Standard",
+                        validityDays: 7,
+                        validUntil: new Date(Date.now() + 7*24*60*60*1000).toISOString()
+                      })
+                    });
+                    const quote = await quoteRes.json();
+
+                    setShowInquiryModal(false);
+                    await queryClient.invalidateQueries({ queryKey: ["quotes"] });
+                    window.dispatchEvent(new CustomEvent("openChat", { detail: quote.id }));
+                  } catch (e) {
+                    console.error("Failed to open chat", e);
+                  }
+                }}
+                className="text-slate-500 hover:text-slate-800 text-sm font-semibold flex items-center gap-1.5 transition-colors"
+              >
+                <MessageSquare className="w-4 h-4" /> Just chat with supplier instead
               </button>
             </div>
           </div>
         </div>
-      )}
-
-      {showAltSuppliers && (
-        <AlternativeSuppliersModal
-          productName={product.title}
-          category={product.category || "General"}
-          currentSupplier={product.supplierName}
-          onClose={() => setShowAltSuppliers(false)}
-        />
       )}
 
       {/* Split Order Modal */}
