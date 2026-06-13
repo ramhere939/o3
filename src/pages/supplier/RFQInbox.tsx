@@ -36,7 +36,7 @@ export default function RFQInbox() {
     if (hasQuoted) return false;
 
     if (filter === "") return rfq.status !== "expired";
-    if (filter === "sent") return rfq.status === "sent" || rfq.status === "open";
+    if (filter === "sent") return rfq.status === "sent";
     if (filter === "viewed") return rfq.status === "viewed";
     
     return true;
