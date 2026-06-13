@@ -153,8 +153,8 @@ export default function BuyerMessages() {
               const msgsB = messages.filter(m => m.quoteId === b.id);
               const lastA = msgsA[msgsA.length - 1];
               const lastB = msgsB[msgsB.length - 1];
-              const timeA = lastA ? new Date(lastA.timestamp).getTime() : new Date(a.createdAt || Date.now()).getTime();
-              const timeB = lastB ? new Date(lastB.timestamp).getTime() : new Date(b.createdAt || Date.now()).getTime();
+              const timeA = lastA ? new Date(lastA.timestamp).getTime() : new Date(a.createdAt || 0).getTime();
+              const timeB = lastB ? new Date(lastB.timestamp).getTime() : new Date(b.createdAt || 0).getTime();
               return timeB - timeA;
             }).map(quote => {
               const quoteMsgs = messages.filter(m => m.quoteId === quote.id);
